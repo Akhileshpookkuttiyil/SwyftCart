@@ -83,7 +83,7 @@ const Navbar = () => {
         {/* Auth Controls */}
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
+            <button className="px-4 py-1.5 text-sm bg-gray-200 text-white rounded-full hover:bg-blue-700 transition">
               Sign In
             </button>
           </SignInButton>
@@ -101,7 +101,7 @@ const Navbar = () => {
               <UserButton.Action
                 label="My Orders"
                 labelIcon={<BoxIcon />}
-                onClick={() => router.push("/orders")}
+                onClick={() => router.push("/my-orders")}
               />
             </UserButton.MenuItems>
           </UserButton>
