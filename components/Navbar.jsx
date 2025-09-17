@@ -83,7 +83,7 @@ const Navbar = () => {
         {/* Auth Controls */}
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-1.5 text-sm bg-gray-200 text-white rounded-full hover:bg-blue-700 transition">
+            <button className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
               Sign In
             </button>
           </SignInButton>
@@ -94,6 +94,10 @@ const Navbar = () => {
             appearance={{
               elements: {
                 avatarBox: "w-8 h-8", // consistent avatar
+                userButtonPopoverCard:
+                  "w-screen max-w-full rounded-none border-t md:w-64 md:rounded-xl md:shadow-md",
+                userButtonPopoverActionButton:
+                  "w-full px-4 py-3 text-base md:w-auto md:px-3 md:py-2 md:text-sm",
               },
             }}
           >
