@@ -1,102 +1,157 @@
 "use client";
-import { productsDummyData, userDummyData } from "@/assets/assets";
-import { useUser } from "@clerk/nextjs";
+
+import { productsDummyData } from "@/assets/assets";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 
-export const AppContext = createContext();
+/**
+ * Global App Context
+ */
+export const AppContext = createContext(null);
 
-export const useAppContext = () => {
-  return useContext(AppContext);
-};
+/**
+ * Hook to use context
+ */
+export const useAppContext = () => useContext(AppContext);
 
-export const AppContextProvider = (props) => {
-  const currency = process.env.NEXT_PUBLIC_CURRENCY;
+export const AppContextProvider = ({ children }) => {
+  const currency = process.env.NEXT_PUBLIC_CURRENCY || "₹";
   const router = useRouter();
 
-  const { user } = useUser();
+  // Clerk auth
+  const { user, isLoaded } = useUser();
+  const { getToken, isSignedIn, signOut } = useAuth();
 
+  // Global state
   const [products, setProducts] = useState([]);
-  const [userData, setUserData] = useState(false);
-  const [isSeller, setIsSeller] = useState(true);
+  const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
 
+  /**
+   * Load product data (replace with API in production)
+   */
   const fetchProductData = async () => {
-    setProducts(productsDummyData);
-  };
-
-  const fetchUserData = async () => {
-    setUserData(userDummyData);
-  };
-
-  const addToCart = async (itemId) => {
-    let cartData = structuredClone(cartItems);
-    if (cartData[itemId]) {
-      cartData[itemId] += 1;
-    } else {
-      cartData[itemId] = 1;
+    try {
+      setProducts(productsDummyData);
+    } catch (error) {
+      console.error("Error fetching products:", error);
     }
-    setCartItems(cartData);
   };
 
-  const updateCartQuantity = async (itemId, quantity) => {
-    let cartData = structuredClone(cartItems);
-    if (quantity === 0) {
-      delete cartData[itemId];
-    } else {
-      cartData[itemId] = quantity;
+  /**
+   * Detect user role (from Clerk publicMetadata)
+   */
+  const detectUserRole = () => {
+    if (!user) {
+      setIsSeller(false);
+      return;
     }
-    setCartItems(cartData);
+    try {
+      const role = user.publicMetadata?.role;
+      setIsSeller(role === "seller");
+    } catch (error) {
+      console.error("Error reading user role:", error);
+      setIsSeller(false);
+    }
   };
 
-  const getCartCount = () => {
-    let totalCount = 0;
-    for (const items in cartItems) {
-      if (cartItems[items] > 0) {
-        totalCount += cartItems[items];
+  /**
+   * Cart operations
+   */
+  const addToCart = (itemId) => {
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      updated[itemId] = (updated[itemId] || 0) + 1;
+      return updated;
+    });
+  };
+
+  const updateCartQuantity = (itemId, quantity) => {
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      if (quantity <= 0) {
+        delete updated[itemId];
+      } else {
+        updated[itemId] = quantity;
       }
-    }
-    return totalCount;
+      return updated;
+    });
   };
+
+  const getCartCount = () =>
+    Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
 
   const getCartAmount = () => {
-    let totalAmount = 0;
-    for (const items in cartItems) {
-      let itemInfo = products.find((product) => product._id === items);
-      if (cartItems[items] > 0) {
-        totalAmount += itemInfo.offerPrice * cartItems[items];
-      }
+    return (
+      Math.floor(
+        Object.entries(cartItems).reduce((total, [id, qty]) => {
+          const product = products.find((p) => p._id === id);
+          if (!product) return total;
+          return total + product.offerPrice * qty;
+        }, 0) * 100
+      ) / 100
+    );
+  };
+
+  /**
+   * Effects
+   */
+  useEffect(() => {
+    if (isLoaded) {
+      detectUserRole();
     }
-    return Math.floor(totalAmount * 100) / 100;
-  };
+  }, [user, isLoaded]);
 
   useEffect(() => {
-    fetchProductData();
-  }, []);
+    if (true) {
+      fetchProductData();
+    } else {
+      setProducts([]); // clear products on logout
+      setCartItems({}); // clear cart on logout
+    }
+  }, [user]);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  /**
+   * Memoize context value to prevent unnecessary re-renders
+   */
+  const value = useMemo(
+    () => ({
+      // Clerk
+      user,
+      isLoaded,
+      isSignedIn,
+      getToken,
+      signOut,
 
-  const value = {
-    user,
-    currency,
-    router,
-    isSeller,
-    setIsSeller,
-    userData,
-    fetchUserData,
-    products,
-    fetchProductData,
-    cartItems,
-    setCartItems,
-    addToCart,
-    updateCartQuantity,
-    getCartCount,
-    getCartAmount,
-  };
+      // Global settings
+      currency,
+      router,
 
-  return (
-    <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
+      // Role
+      isSeller,
+      setIsSeller,
+
+      // Products
+      products,
+      fetchProductData,
+
+      // Cart
+      cartItems,
+      setCartItems,
+      addToCart,
+      updateCartQuantity,
+      getCartCount,
+      getCartAmount,
+    }),
+    [user, isLoaded, isSignedIn, currency, router, isSeller, products, cartItems]
   );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
