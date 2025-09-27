@@ -17,8 +17,8 @@ export async function GET(request) {
 
     await connectDB();
 
-    // Assuming you stored Clerk userId in `clerkId` field in your User model
-    const user = await User.findOne({ clerkId: userId });
+    // Correct: userId from Clerk is stored as _id
+    const user = await User.findById(userId);
 
     if (!user) {
       return NextResponse.json(
