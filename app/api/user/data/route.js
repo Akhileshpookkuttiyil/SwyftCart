@@ -16,7 +16,9 @@ export async function GET(request) {
 
     await connectDB();
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select(
+      "_id name email imageUrl role cartItems"
+    );
 
     if (!user) {
       return NextResponse.json(
@@ -25,14 +27,20 @@ export async function GET(request) {
       );
     }
 
-    // Only expose safe fields
-    const { _id, name, email, imageUrl, cartItems } = user;
-    return NextResponse.json({ success: true, user: { _id, name, email, imageUrl, cartItems } });
+    const userData = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      imageUrl: user.imageUrl || "",
+      role: user.role || "user",
+      cartItems: user.cartItems || {},
+    };
 
+    return NextResponse.json({ success: true, user: userData });
   } catch (error) {
     console.error("GET /api/user/data error:", error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }
