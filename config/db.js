@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-let cached = global.mongoose;
+let cached = global.mongoose || { conn: null, promise: null };
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
 async function connectDB() {
@@ -16,9 +16,11 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined");
+    }
+
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts);
   }
 
   cached.conn = await cached.promise;

@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
-    // Get Clerk auth
     const { userId } = getAuth(request);
 
     if (!userId) {
@@ -17,7 +16,6 @@ export async function GET(request) {
 
     await connectDB();
 
-    // Correct: userId from Clerk is stored as _id
     const user = await User.findById(userId);
 
     if (!user) {
@@ -27,8 +25,12 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json({ success: true, user });
+    // Only expose safe fields
+    const { _id, name, email, imageUrl, cartItems } = user;
+    return NextResponse.json({ success: true, user: { _id, name, email, imageUrl, cartItems } });
+
   } catch (error) {
+    console.error("GET /api/user/data error:", error);
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
