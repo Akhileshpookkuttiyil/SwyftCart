@@ -1,15 +1,10 @@
 "use client";
 
+import { productsDummyData } from "@/assets/assets";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useMemo,
-} from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import ClientOnly from "@/components/ClientOnly";
 
@@ -31,14 +26,15 @@ export const AppContextProvider = ({ children }) => {
 
   const fetchProductData = async () => {
     try {
-      // In the future this should be an API call
-      // For now we preserve the intent of loading products
       const { data } = await axios.get("/api/product/list");
       if (data.success) {
         setProducts(data.products);
+      } else {
+        setProducts(productsDummyData);
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching products, using dummy data:", error);
+      setProducts(productsDummyData);
     }
   };
 
@@ -51,16 +47,18 @@ export const AppContextProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (data?.success) {
+      if (data?.success && data.user) {
         setUserData(data.user);
         setCartItems(data.user.cartItems || {});
         setIsSeller(user.publicMetadata?.role === "seller");
       } else {
-        toast.error(data?.message || "Failed to fetch user data");
+        setUserData(null);
+        setCartItems({});
       }
     } catch (error) {
       console.error("Fetch user data error:", error);
-      toast.error(error.message || "Error fetching user data");
+      setUserData(null);
+      setCartItems({});
     }
   };
 
@@ -122,17 +120,7 @@ export const AppContextProvider = ({ children }) => {
       fetchProductData,
       fetchUserData,
     }),
-    [
-      user,
-      isLoaded,
-      isSignedIn,
-      currency,
-      router,
-      isSeller,
-      userData,
-      products,
-      cartItems,
-    ]
+    [user, isLoaded, isSignedIn, currency, router, isSeller, userData, products, cartItems]
   );
 
   return (
