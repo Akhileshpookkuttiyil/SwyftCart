@@ -6,11 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --ext .js,.jsx,.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.32.0",
     "axios": "^1.12.2",
+    "cloudinary": "^2.9.0",
     "inngest": "^3.40.3",
     "lucide-react": "^0.544.0",
     "mongoose": "^8.18.1",

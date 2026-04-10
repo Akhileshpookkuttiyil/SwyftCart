@@ -9,8 +9,9 @@ import { useAppContext } from "@/context/AppContext";
 import { assets, BoxIcon, CartIcon } from "@/assets/assets";
 
 const Navbar = () => {
-  const { isSeller, router, cartItems } = useAppContext();
+  const { isSeller, router, getCartCount } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
+  const cartCount = getCartCount();
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -73,9 +74,9 @@ const Navbar = () => {
           aria-label="Cart"
         >
           <CartIcon className="w-6 h-6 text-gray-700" />
-          {cartItems?.length > 0 && (
+          {cartCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-              {cartItems.length}
+              {cartCount}
             </span>
           )}
         </button>
