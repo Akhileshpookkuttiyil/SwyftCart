@@ -60,7 +60,9 @@ export const AppContextProvider = ({ children }) => {
       if (data?.success && data.user) {
         setUserData(data.user);
         setCartItems(data.user.cartItems || {});
-        setIsSeller(user?.publicMetadata?.role === "seller");
+        setIsSeller(
+          data.user.role === "seller" || user?.publicMetadata?.role === "seller"
+        );
       } else {
         setUserData(null);
         setCartItems({});
