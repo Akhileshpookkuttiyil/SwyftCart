@@ -27,10 +27,18 @@ const assertProductExists = async (productId) => {
   }
 };
 
+const getUserFavorites = (user) =>
+  sanitizeWishlist(user?.favorites?.length ? user.favorites : user?.wishlistItems || []);
+
+const assignUserFavorites = (user, favorites) => {
+  user.favorites = favorites;
+  user.wishlistItems = favorites;
+};
+
 export const fetchWishlist = async (userId) => {
   await connectDB();
-  const user = await User.findById(userId).select("wishlistItems").lean();
-  return sanitizeWishlist(user?.wishlistItems || []);
+  const user = await User.findById(userId).select("wishlistItems favorites").lean();
+  return getUserFavorites(user);
 };
 
 export const addToWishlist = async (userId, productId) => {
@@ -38,11 +46,11 @@ export const addToWishlist = async (userId, productId) => {
   await connectDB();
   await assertProductExists(productId);
 
-  const user = await User.findById(userId).select("wishlistItems");
+  const user = await User.findById(userId).select("wishlistItems favorites");
   if (!user) throw new AppError("User not found", 404);
 
-  const next = sanitizeWishlist([...(user.wishlistItems || []), productId]);
-  user.wishlistItems = next;
+  const next = sanitizeWishlist([...getUserFavorites(user), productId]);
+  assignUserFavorites(user, next);
   await user.save();
   return next;
 };
@@ -51,14 +59,15 @@ export const removeFromWishlist = async (userId, productId) => {
   validateProductId(productId);
   await connectDB();
 
-  const user = await User.findById(userId).select("wishlistItems");
+  const user = await User.findById(userId).select("wishlistItems favorites");
   if (!user) throw new AppError("User not found", 404);
 
-  user.wishlistItems = sanitizeWishlist(user.wishlistItems || []).filter(
+  const next = getUserFavorites(user).filter(
     (item) => item !== String(productId)
   );
+  assignUserFavorites(user, next);
   await user.save();
-  return sanitizeWishlist(user.wishlistItems);
+  return getUserFavorites(user);
 };
 
 export const toggleWishlist = async (userId, productId) => {
@@ -66,43 +75,43 @@ export const toggleWishlist = async (userId, productId) => {
   await connectDB();
   await assertProductExists(productId);
 
-  const user = await User.findById(userId).select("wishlistItems");
+  const user = await User.findById(userId).select("wishlistItems favorites");
   if (!user) throw new AppError("User not found", 404);
 
-  const current = new Set(sanitizeWishlist(user.wishlistItems || []));
+  const current = new Set(getUserFavorites(user));
   if (current.has(String(productId))) {
     current.delete(String(productId));
   } else {
     current.add(String(productId));
   }
 
-  user.wishlistItems = Array.from(current);
+  assignUserFavorites(user, Array.from(current));
   await user.save();
-  return sanitizeWishlist(user.wishlistItems);
+  return getUserFavorites(user);
 };
 
 export const clearWishlist = async (userId) => {
   await connectDB();
   const user = await User.findByIdAndUpdate(
     userId,
-    { $set: { wishlistItems: [] } },
+    { $set: { wishlistItems: [], favorites: [] } },
     { new: true, upsert: false }
   )
-    .select("wishlistItems")
+    .select("wishlistItems favorites")
     .lean();
 
   if (!user) throw new AppError("User not found", 404);
-  return sanitizeWishlist(user.wishlistItems);
+  return getUserFavorites(user);
 };
 
 export const mergeGuestWishlist = async (userId, guestItems = []) => {
   await connectDB();
-  const user = await User.findById(userId).select("wishlistItems");
+  const user = await User.findById(userId).select("wishlistItems favorites");
   if (!user) throw new AppError("User not found", 404);
 
   const incoming = sanitizeWishlist(guestItems);
   if (!incoming.length) {
-    return sanitizeWishlist(user.wishlistItems || []);
+    return getUserFavorites(user);
   }
 
   const validProducts = await Product.find({ _id: { $in: incoming } })
@@ -110,8 +119,10 @@ export const mergeGuestWishlist = async (userId, guestItems = []) => {
     .lean();
   const validIds = validProducts.map((product) => String(product._id));
 
-  user.wishlistItems = sanitizeWishlist([...(user.wishlistItems || []), ...validIds]);
+  assignUserFavorites(
+    user,
+    sanitizeWishlist([...getUserFavorites(user), ...validIds])
+  );
   await user.save();
-  return sanitizeWishlist(user.wishlistItems);
+  return getUserFavorites(user);
 };
-

@@ -3,15 +3,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
+import Link from "next/link";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
 import { normalizeProductRecord } from "@/lib/productCatalog";
-import axios from "axios";
-import toast from "react-hot-toast";
+import { fetchSellerProductsRequest } from "@/lib/api/products";
+import { errorToast } from "@/lib/toast";
 
 const ProductList = () => {
-  const { router, getToken, user, isLoaded, formatPrice } = useAppContext();
+  const { user, isLoaded, formatPrice } = useAppContext();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,23 +20,20 @@ const ProductList = () => {
   const fetchSellerProduct = useCallback(async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const { data } = await axios.get("/api/product/seller-list", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const data = await fetchSellerProductsRequest();
 
       if (data.success) {
         setProducts((data.products || []).map(normalizeProductRecord));
       } else {
-        toast.error(data.message || "Failed to fetch products");
+        errorToast(data.message || "Failed to fetch products", "seller-products-error");
       }
     } catch (error) {
       console.error("Fetch seller products error:", error);
-      toast.error("Failed to fetch products");
+      errorToast(error?.message || "Failed to fetch products", "seller-products-error");
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -98,8 +96,8 @@ const ProductList = () => {
                     <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
                     <td className="px-4 py-3">{formatPrice(product.offerPrice)}</td>
                     <td className="px-4 py-3 max-sm:hidden">
-                      <button
-                        onClick={() => router.push(`/product/${product._id}`)}
+                      <Link
+                        href={`/product/${product._id}`}
                         className="flex items-center gap-1 px-1.5 md:px-3.5 py-2 bg-orange-600 text-white rounded-md"
                       >
                         <span className="hidden md:block">Visit</span>
@@ -108,7 +106,7 @@ const ProductList = () => {
                           src={assets.redirect_icon}
                           alt="redirect_icon"
                         />
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}

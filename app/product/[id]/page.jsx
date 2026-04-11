@@ -9,12 +9,13 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import Loading from "@/components/Loading";
 import { useAppContext } from "@/context/AppContext";
+import useCart from "@/hooks/useCart";
 import React from "react";
 
 const Product = () => {
   const { id } = useParams();
-  const { products, productsLoading, router, addToCart, formatPrice } =
-    useAppContext();
+  const { products, productsLoading, router, formatPrice } = useAppContext();
+  const { addToCart } = useCart();
 
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);

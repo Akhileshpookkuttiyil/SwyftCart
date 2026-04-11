@@ -1,17 +1,21 @@
 import React from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAppContext } from '@/context/AppContext';
+import useFavorites from '@/hooks/useFavorites';
 
 const ProductCard = ({ product }) => {
 
-    const { formatPrice, router, toggleWishlist, isWishlisted } = useAppContext()
+    const { formatPrice } = useAppContext()
+    const { toggleFavorite, isFavorite } = useFavorites()
     const rating = Number(product?.rating ?? 4.5)
-    const wished = isWishlisted(product._id)
+    const wished = isFavorite(product._id)
 
     return (
-        <div
-            onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}
+        <Link
+            href={`/product/${product._id}`}
+            prefetch
             className="flex flex-col items-start gap-0.5 max-w-[200px] w-full cursor-pointer"
         >
             <div className="cursor-pointer group relative bg-gray-500/10 rounded-lg w-full h-52 flex items-center justify-center">
@@ -25,7 +29,8 @@ const ProductCard = ({ product }) => {
                 <button
                     onClick={(event) => {
                         event.stopPropagation();
-                        toggleWishlist(product._id);
+                        event.preventDefault();
+                        toggleFavorite(product._id);
                     }}
                     className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${wished ? "bg-orange-100" : "bg-white"}`}
                     aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
@@ -64,7 +69,7 @@ const ProductCard = ({ product }) => {
                     Buy now
                 </button>
             </div>
-        </div>
+        </Link>
     )
 }
 

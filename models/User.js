@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     cartItems: { type: Object, default: {} },
     wishlistItems: { type: [String], default: [] },
+    favorites: { type: [String], default: [] },
   },
   {
     minimize: false,

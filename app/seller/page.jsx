@@ -3,12 +3,10 @@
 import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
-import axios from "axios";
-import toast from "react-hot-toast";
+import { addProductRequest } from "@/lib/api/products";
+import { errorToast, successToast } from "@/lib/toast";
 
 const AddProduct = () => {
-  const { getToken } = useAppContext();
   const [files, setFiles] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -23,7 +21,7 @@ const AddProduct = () => {
     const validFiles = files.filter(Boolean);
 
     if (!validFiles.length) {
-      toast.error("Please upload at least one product image");
+      errorToast("Please upload at least one product image", "add-product-error");
       return;
     }
 
@@ -40,16 +38,10 @@ const AddProduct = () => {
 
     try {
       setSubmitting(true);
-      const token = await getToken();
-      const { data } = await axios.post("/api/product/add", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const data = await addProductRequest(formData);
 
       if (data.success) {
-        toast.success(data.message || "Product added successfully");
+        successToast(data.message || "Product added successfully", "add-product-success");
         setFiles([]);
         setName("");
         setDescription("");
@@ -57,11 +49,11 @@ const AddProduct = () => {
         setPrice("");
         setOfferPrice("");
       } else {
-        toast.error(data.message || "Failed to add product");
+        errorToast(data.message || "Failed to add product", "add-product-error");
       }
     } catch (error) {
       console.error("Error adding product:", error);
-      toast.error(error.response?.data?.message || "Failed to add product");
+      errorToast(error?.message || "Failed to add product", "add-product-error");
     } finally {
       setSubmitting(false);
     }

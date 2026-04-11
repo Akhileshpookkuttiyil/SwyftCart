@@ -23,7 +23,7 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-200 bg-white text-gray-700 shadow-sm">
       {/* Logo */}
-      <button onClick={() => router.push("/")} aria-label="Go to Home">
+      <Link href="/" aria-label="Go to Home">
         <Image
           src={assets.logo}
           alt="QuickCart Logo"
@@ -32,7 +32,7 @@ const Navbar = () => {
           priority
           className="w-28 md:w-32 cursor-pointer"
         />
-      </button>
+      </Link>
 
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center gap-6 lg:gap-10">
@@ -47,12 +47,12 @@ const Navbar = () => {
         ))}
 
         {isSeller && (
-          <button
-            onClick={() => router.push("/seller")}
+          <Link
+            href="/seller"
             className="text-xs border px-4 py-1.5 rounded-full hover:bg-gray-100 transition"
           >
             Seller Dashboard
-          </button>
+          </Link>
         )}
       </div>
 
@@ -68,8 +68,8 @@ const Navbar = () => {
         />
 
         {/* Cart */}
-        <button
-          onClick={() => router.push("/cart")}
+        <Link
+          href="/cart"
           className="relative p-2 rounded-full hover:bg-gray-100 transition"
           aria-label="Cart"
         >
@@ -79,7 +79,7 @@ const Navbar = () => {
               {cartCount}
             </span>
           )}
-        </button>
+        </Link>
 
         {/* Auth Controls */}
         <SignedOut>

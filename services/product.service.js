@@ -82,8 +82,14 @@ const buildProductFilters = (filters = {}) => {
   }
 
   if (filters.search) {
-    const pattern = new RegExp(escapeRegex(filters.search.trim()), "i");
-    query.$or = [{ name: pattern }, { description: pattern }];
+    const searchTerm = filters.search.trim();
+
+    if (searchTerm.length >= 3) {
+      query.$text = { $search: searchTerm };
+    } else {
+      const pattern = new RegExp(escapeRegex(searchTerm), "i");
+      query.$or = [{ name: pattern }, { description: pattern }];
+    }
   }
 
   return query;

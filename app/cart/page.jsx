@@ -5,10 +5,12 @@ import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { useAppContext } from "@/context/AppContext";
+import useCart from "@/hooks/useCart";
 
 const Cart = () => {
 
-  const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount, formatPrice } = useAppContext();
+  const { products, router, formatPrice } = useAppContext();
+  const { cartItems, addToCart, updateCartQuantity, getCartCount } = useCart();
 
   return (
     <>
