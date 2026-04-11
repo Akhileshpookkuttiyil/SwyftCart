@@ -14,7 +14,7 @@ SwyftCart is an open-source **Next.js 15 eCommerce application** that combines a
 - **MongoDB + Mongoose** integration for user persistence
 - **Inngest** functions to sync Clerk user create, update, and delete events into MongoDB
 - Remote product image support for **Cloudinary** and GitHub-hosted assets
-- Development fallbacks using seeded product, address, and order data while backend endpoints are still being implemented
+- MongoDB-backed product catalog with remaining checkout-related flows still in progress
 
 ## Tech Stack
 
@@ -52,12 +52,12 @@ SwyftCart follows a single-repo Next.js architecture with the App Router as the 
 - `middleware.ts` applies Clerk middleware across app and API routes
 - `config/db.js` manages a cached MongoDB connection for server-side handlers and background functions
 - `config/inngest.js` defines event-driven background functions that keep the local `User` collection in sync with Clerk lifecycle events
-- `models/User.js` is currently the only persisted domain model; product, address, and order data are still mocked in the UI layer
+- `models/User.js` and `models/product.js` provide the current persisted domain models; address and order data are still mocked in the UI layer
 
 ### Current Request/Data Flow
 
 1. The app boots through `app/layout.js` with `ClerkProvider`, `AppContextProvider`, and toast notifications.
-2. Product data is requested from `/api/product/list`; when that endpoint is unavailable, the app falls back to seeded catalog data from `assets/assets.js`.
+2. Product data is requested from `/api/product/list` and served from MongoDB-backed route handlers.
 3. Signed-in users fetch profile and cart data from `GET /api/user/data`.
 4. Clerk user lifecycle events are handled through the Inngest route at `/api/inngest`, which creates, updates, or deletes local MongoDB user documents.
 
@@ -84,7 +84,7 @@ SwyftCart follows a single-repo Next.js architecture with the App Router as the 
 3. Add the required environment variables:
 
    ```env
-   NEXT_PUBLIC_CURRENCY=$
+   NEXT_PUBLIC_CURRENCY=₹
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
    CLERK_SECRET_KEY=
    MONGODB_URI=
@@ -105,7 +105,6 @@ SwyftCart follows a single-repo Next.js architecture with the App Router as the 
 
 ### Notes
 
-- The app is usable without a product API because `AppContext` falls back to seeded product data.
 - User data endpoints require valid Clerk authentication and a working MongoDB connection.
 - Cloudinary variables are only needed once product image uploads are connected to the backend.
 
@@ -177,10 +176,9 @@ The backend surface is currently small but functional for auth-linked user data 
 
 ## Known Limitations
 
-- `/api/product/list` is referenced by the app but is not implemented yet, so the catalog falls back to seeded product data.
-- Order history, seller product listing, and address selection currently rely on dummy data instead of persisted records.
+- Order history, seller orders, and address selection still rely on dummy data instead of persisted records.
 - The add-product form, add-address form, promo code flow, and place-order action are UI scaffolds without connected backend mutations.
-- Only the `User` model exists today; `Product`, `Order`, and `Address` models are still missing.
+- `Product` now exists, but `Order` and `Address` models plus their APIs are still missing.
 - Cart changes live in client state and are not written back to MongoDB, so cart persistence across devices is not available.
 - Seller route protection is not enforced server-side yet; `lib/authSeller.js` exists, but seller pages are not gated by middleware or route handlers.
 - Navigation links for `/about` and `/contact` are present in the navbar, but those routes are not part of the current app tree.

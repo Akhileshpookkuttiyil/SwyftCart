@@ -1,8 +1,9 @@
 "use client";
 
-import { productsDummyData } from "@/assets/assets";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
+import { normalizeProductRecord } from "@/lib/productCatalog";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -17,15 +18,6 @@ export const AppContext = createContext(null);
 
 export const useAppContext = () => useContext(AppContext);
 
-const normalizeProduct = (product) => ({
-  ...product,
-  image: Array.isArray(product.image)
-    ? product.image
-    : Array.isArray(product.images)
-      ? product.images
-      : [],
-});
-
 export const AppContextProvider = ({ children }) => {
   const currency = process.env.NEXT_PUBLIC_CURRENCY || "\u20B9";
   const router = useRouter();
@@ -34,21 +26,25 @@ export const AppContextProvider = ({ children }) => {
   const { getToken, isSignedIn, signOut } = useAuth();
 
   const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
 
   const fetchProductData = useCallback(async () => {
+    setProductsLoading(true);
     try {
       const { data } = await axios.get("/api/product/list");
       if (data.success) {
-        setProducts((data.products || []).map(normalizeProduct));
+        setProducts((data.products || []).map(normalizeProductRecord));
       } else {
-        setProducts(productsDummyData.map(normalizeProduct));
+        setProducts([]);
       }
     } catch (error) {
-      console.error("Error fetching products, using dummy data:", error);
-      setProducts(productsDummyData.map(normalizeProduct));
+      console.error("Error fetching products:", error);
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
     }
   }, []);
 
@@ -109,6 +105,11 @@ export const AppContextProvider = ({ children }) => {
     [cartItems, products]
   );
 
+  const formatPrice = useCallback(
+    (value) => formatCurrencyValue(value, currency),
+    [currency]
+  );
+
   useEffect(() => {
     fetchProductData();
   }, [fetchProductData]);
@@ -131,6 +132,7 @@ export const AppContextProvider = ({ children }) => {
       getToken,
       signOut,
       currency,
+      formatPrice,
       router,
       isSeller,
       setIsSeller,
@@ -142,6 +144,7 @@ export const AppContextProvider = ({ children }) => {
       getCartCount,
       getCartAmount,
       products,
+      productsLoading,
       fetchProductData,
       fetchUserData,
     }),
@@ -152,6 +155,7 @@ export const AppContextProvider = ({ children }) => {
       getToken,
       signOut,
       currency,
+      formatPrice,
       router,
       isSeller,
       userData,
@@ -161,6 +165,7 @@ export const AppContextProvider = ({ children }) => {
       getCartCount,
       getCartAmount,
       products,
+      productsLoading,
       fetchProductData,
       fetchUserData,
     ]

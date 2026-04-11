@@ -9,7 +9,7 @@ import Loading from "@/components/Loading";
 
 const MyOrders = () => {
 
-    const { currency } = useAppContext();
+    const { formatPrice } = useAppContext();
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ const MyOrders = () => {
                                         <span>{order.address.phoneNumber}</span>
                                     </p>
                                 </div>
-                                <p className="font-medium my-auto">{currency}{order.amount}</p>
+                                <p className="font-medium my-auto">{formatPrice(order.amount)}</p>
                                 <div>
                                     <p className="flex flex-col">
                                         <span>Method : COD</span>

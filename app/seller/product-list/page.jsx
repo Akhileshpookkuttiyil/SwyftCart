@@ -6,11 +6,12 @@ import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
+import { normalizeProductRecord } from "@/lib/productCatalog";
 import axios from "axios";
 import toast from "react-hot-toast";
 
 const ProductList = () => {
-  const { router, getToken, user, isLoaded } = useAppContext();
+  const { router, getToken, user, isLoaded, formatPrice } = useAppContext();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ const ProductList = () => {
       });
 
       if (data.success) {
-        setProducts(data.products || []);
+        setProducts((data.products || []).map(normalizeProductRecord));
       } else {
         toast.error(data.message || "Failed to fetch products");
       }
@@ -80,8 +81,8 @@ const ProductList = () => {
                     </td>
                   </tr>
                 )}
-                {products.map((product, index) => (
-                  <tr key={index} className="border-t border-gray-500/20">
+                {products.map((product) => (
+                  <tr key={product._id} className="border-t border-gray-500/20">
                     <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
                       <div className="bg-gray-500/10 rounded p-2">
                         <Image
@@ -95,7 +96,7 @@ const ProductList = () => {
                       <span className="truncate w-full">{product.name}</span>
                     </td>
                     <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
-                    <td className="px-4 py-3">${product.offerPrice}</td>
+                    <td className="px-4 py-3">{formatPrice(product.offerPrice)}</td>
                     <td className="px-4 py-3 max-sm:hidden">
                       <button
                         onClick={() => router.push(`/product/${product._id}`)}

@@ -13,7 +13,8 @@ import React from "react";
 
 const Product = () => {
   const { id } = useParams();
-  const { products, router, addToCart } = useAppContext();
+  const { products, productsLoading, router, addToCart, formatPrice } =
+    useAppContext();
 
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);
@@ -24,7 +25,34 @@ const Product = () => {
     setMainImage(product?.image?.[0] || null);
   }, [id, products]);
 
-  return productData ? (
+  const rating = Number(productData?.rating ?? 4.5);
+
+  if (productsLoading) {
+    return <Loading />;
+  }
+
+  if (!productData) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 text-center">
+          <h1 className="text-2xl font-medium text-gray-800">Product not found</h1>
+          <p className="mt-3 text-gray-500">
+            This product is unavailable or may have been removed.
+          </p>
+          <button
+            onClick={() => router.push("/all-products")}
+            className="mt-6 px-6 py-3 bg-orange-600 text-white rounded-md"
+          >
+            Browse Products
+          </button>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
     <>
       <Navbar />
       <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
@@ -65,23 +93,26 @@ const Product = () => {
             </h1>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5">
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                <Image
-                  className="h-4 w-4"
-                  src={assets.star_dull_icon}
-                  alt="star_dull_icon"
-                />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Image
+                    key={index}
+                    className="h-4 w-4"
+                    src={
+                      index < Math.floor(rating)
+                        ? assets.star_icon
+                        : assets.star_dull_icon
+                    }
+                    alt="star_icon"
+                  />
+                ))}
               </div>
-              <p>(4.5)</p>
+              <p>({rating.toFixed(1)})</p>
             </div>
             <p className="text-gray-600 mt-3">{productData.description}</p>
             <p className="text-3xl font-medium mt-6">
-              ${productData.offerPrice}
+              {formatPrice(productData.offerPrice)}
               <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                ${productData.price}
+                {formatPrice(productData.price)}
               </span>
             </p>
             <hr className="bg-gray-600 my-6" />
@@ -132,8 +163,9 @@ const Product = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
             {products
+              .filter((product) => product._id !== productData._id)
               .slice(0, 5)
-              .map((product, index) => <ProductCard key={index} product={product} />)}
+              .map((product) => <ProductCard key={product._id} product={product} />)}
           </div>
           <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
             See more
@@ -142,8 +174,6 @@ const Product = () => {
       </div>
       <Footer />
     </>
-  ) : (
-    <Loading />
   );
 };
 

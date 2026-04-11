@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     imageUrl: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["user", "seller"],
+      default: "user",
+    },
     cartItems: { type: Object, default: {} },
   },
   {
@@ -13,6 +18,8 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.index({ role: 1, createdAt: -1 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
