@@ -5,8 +5,9 @@ import { useAppContext } from '@/context/AppContext';
 
 const ProductCard = ({ product }) => {
 
-    const { formatPrice, router } = useAppContext()
+    const { formatPrice, router, toggleWishlist, isWishlisted } = useAppContext()
     const rating = Number(product?.rating ?? 4.5)
+    const wished = isWishlisted(product._id)
 
     return (
         <div
@@ -21,9 +22,16 @@ const ProductCard = ({ product }) => {
                     width={800}
                     height={800}
                 />
-                <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md">
+                <button
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        toggleWishlist(product._id);
+                    }}
+                    className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${wished ? "bg-orange-100" : "bg-white"}`}
+                    aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                >
                     <Image
-                        className="h-3 w-3"
+                        className={`h-3 w-3 ${wished ? "opacity-100" : "opacity-60"}`}
                         src={assets.heart_icon}
                         alt="heart_icon"
                     />

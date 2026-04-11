@@ -15,7 +15,7 @@ export const getCurrentUserController = withController(
     }
 
     const user = await fetchUserById(userId, {
-      select: "_id name email imageUrl role cartItems",
+      select: "_id name email imageUrl role cartItems wishlistItems",
     });
 
     if (!user) {
@@ -31,6 +31,7 @@ export const getCurrentUserController = withController(
         imageUrl: user.imageUrl || "",
         role: user.role || "user",
         cartItems: user.cartItems || {},
+        wishlistItems: user.wishlistItems || [],
       },
     });
   },
