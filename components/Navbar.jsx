@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppContext } from "@/context/AppContext";
 import { assets, BoxIcon, CartIcon } from "@/assets/assets";
+import NavbarSearch from "./NavbarSearch";
 
 const Navbar = () => {
   const { isSeller, router, getCartCount } = useAppContext();
@@ -58,14 +59,17 @@ const Navbar = () => {
 
       {/* Right Controls (Desktop + Mobile) */}
       <div className="flex items-center gap-4">
-        {/* Search (desktop only) */}
-        <Image
-          src={assets.search_icon}
-          alt="Search"
-          width={20}
-          height={20}
-          className="hidden md:block w-5 h-5 cursor-pointer hover:opacity-80"
-        />
+        {/* Search (desktop + expanding style) */}
+        <div className="hidden md:block">
+          <NavbarSearch />
+        </div>
+
+
+
+
+
+
+
 
         {/* Cart */}
         <Link

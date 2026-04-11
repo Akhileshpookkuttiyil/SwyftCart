@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Loading from "@/components/Loading";
 import { useAppContext } from "@/context/AppContext";
 import { fetchProductListRequest } from "@/lib/api/products";
+import { normalizeProductRecord } from "@/lib/productCatalog";
 import { errorToast } from "@/lib/toast";
 
 const RECENT_SEARCHES_KEY = "swyftcart_recent_searches";
@@ -50,7 +51,7 @@ const AllProducts = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchInput.trim());
-    }, 350);
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
@@ -68,7 +69,7 @@ const AllProducts = () => {
     fetchProductListRequest({ search: debouncedSearch, limit: 20, page: 1 })
       .then((data) => {
         if (!mounted) return;
-        const items = data?.success ? data.products || [] : [];
+        const items = (data?.success ? data.products || [] : []).map(normalizeProductRecord);
         setSearchResults(items);
         setSuggestions(items.slice(0, 6));
       })
