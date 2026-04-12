@@ -118,7 +118,7 @@ export const AppContextProvider = ({ children }) => {
     localStorage.removeItem(GUEST_FAVORITES_KEY);
   }, []);
 
-  const fetchProductData = useCallback(async () => {
+  const fetchProductData = useCallback(async (isRetry = false) => {
     setProductsLoading(true);
     try {
       const data = await fetchProductListRequest();
@@ -128,7 +128,14 @@ export const AppContextProvider = ({ children }) => {
         setProducts([]);
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      // Transient cold-start failures (network not ready yet): retry once silently
+      const isTransient = error?.status === 0 || error?.status === 503;
+      if (isTransient && !isRetry) {
+        setTimeout(() => fetchProductData(true), 2000);
+        return;
+      }
+      // Real error — log the actual message, not a plain object
+      console.error("Error fetching products:", error?.message || error);
       setProducts([]);
     } finally {
       setProductsLoading(false);

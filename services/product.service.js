@@ -189,3 +189,22 @@ export const createProduct = async (payload) => {
 
   return normalizeProductDocument(createdProduct.toObject());
 };
+
+export const updateProduct = async (productId, userId, updateData) => {
+  await connectDB();
+
+  const product = await Product.findOneAndUpdate(
+    { _id: productId, userId },
+    { $set: updateData },
+    { new: true }
+  );
+
+  return product ? normalizeProductDocument(product.toObject()) : null;
+};
+
+export const deleteProduct = async (productId, userId) => {
+  await connectDB();
+
+  const product = await Product.findOneAndDelete({ _id: productId, userId });
+  return product ? true : false;
+};

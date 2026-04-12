@@ -10,6 +10,8 @@ import {
   createProduct,
   fetchProducts,
   fetchSellerProducts,
+  updateProduct,
+  deleteProduct,
 } from "@/services/product.service";
 
 const getStringParam = (searchParams, key) => {
@@ -132,5 +134,79 @@ export const createProductController = withController(
   {
     fallbackMessage: "Failed to add product",
     context: "POST /api/product/add",
+  }
+);
+
+export const updateProductController = withController(
+  async (request, { params }) => {
+    const userId = await requireSellerAuth(request);
+    
+    // We expect params to be a Promise in Next.js 15, or we can just destructure it directly in Next.js 14
+    // Wait, the params might be direct in route.js, let's just make sure we handle it.
+    const { id } = params || {};
+    if (!id) throw new AppError("Product ID is required", 400);
+
+    const formData = await request.formData();
+
+    let updateData = {};
+    const name = formData.get("name");
+    const description = formData.get("description");
+    const price = formData.get("price");
+    const category = formData.get("category");
+    const offerPrice = formData.get("offerPrice");
+
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (price) updateData.price = Number(price);
+    if (category) updateData.category = category;
+    if (offerPrice) updateData.offerPrice = Number(offerPrice);
+
+    const files = formData
+      .getAll("images")
+      .filter((file) => typeof file?.arrayBuffer === "function" && file.size > 0);
+
+    if (files.length > 0) {
+      updateData.image = await uploadImagesToCloudinary(files);
+    } // Note: Without new images, the existing image array remains unchanged in DB
+
+    const updatedProduct = await updateProduct(id, userId, updateData);
+
+    if (!updatedProduct) {
+      throw new AppError("Product not found or unauthorized", 404);
+    }
+
+    return createSuccessResponse({
+      success: true,
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
+  },
+  {
+    fallbackMessage: "Failed to update product",
+    context: "PATCH /api/product/[id]",
+  }
+);
+
+export const deleteProductController = withController(
+  async (request, { params }) => {
+    const userId = await requireSellerAuth(request);
+    const { id } = params || {};
+    
+    if (!id) throw new AppError("Product ID is required", 400);
+
+    const isDeleted = await deleteProduct(id, userId);
+
+    if (!isDeleted) {
+      throw new AppError("Product not found or unauthorized", 404);
+    }
+
+    return createSuccessResponse({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  },
+  {
+    fallbackMessage: "Failed to delete product",
+    context: "DELETE /api/product/[id]",
   }
 );

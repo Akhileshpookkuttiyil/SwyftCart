@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppContext } from "@/context/AppContext";
-import { assets, BoxIcon, CartIcon } from "@/assets/assets";
+import { assets, BoxIcon, CartIcon, HeartIcon } from "@/assets/assets";
 import NavbarSearch from "./NavbarSearch";
 
 const Navbar = () => {
@@ -98,11 +98,9 @@ const Navbar = () => {
           <UserButton
             appearance={{
               elements: {
-                avatarBox: "w-8 h-8", // consistent avatar
+                avatarBox: "w-8 h-8",
                 userButtonPopoverCard:
                   "w-screen max-w-full rounded-none border-t md:w-64 md:rounded-xl md:shadow-md",
-                userButtonPopoverActionButton:
-                  "w-full px-4 py-3 text-base md:w-auto md:px-3 md:py-2 md:text-sm",
               },
             }}
           >
@@ -111,6 +109,11 @@ const Navbar = () => {
                 label="My Orders"
                 labelIcon={<BoxIcon />}
                 onClick={() => router.push("/my-orders")}
+              />
+              <UserButton.Action
+                label="Favourites"
+                labelIcon={<HeartIcon />}
+                onClick={() => router.push("/all-products?tab=favourites")}
               />
             </UserButton.MenuItems>
           </UserButton>
