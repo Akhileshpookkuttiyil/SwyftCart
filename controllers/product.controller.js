@@ -144,9 +144,8 @@ export const updateProductController = withController(
   async (request, { params }) => {
     const userId = await requireSellerAuth(request);
 
-    // We expect params to be a Promise in Next.js 15, or we can just destructure it directly in Next.js 14
-    // Wait, the params might be direct in route.js, let's just make sure we handle it.
-    const { id } = params || {};
+    // In Next.js 15, params is a Promise that must be awaited
+    const { id } = (await params) || {};
     if (!id) throw new AppError("Product ID is required", 400);
 
     const formData = await request.formData();
@@ -203,7 +202,7 @@ export const updateProductController = withController(
 export const deleteProductController = withController(
   async (request, { params }) => {
     const userId = await requireSellerAuth(request);
-    const { id } = params || {};
+    const { id } = (await params) || {};
 
     if (!id) throw new AppError("Product ID is required", 400);
 

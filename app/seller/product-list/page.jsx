@@ -15,7 +15,7 @@ import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 
 const ProductList = () => {
-  const { user, isLoaded, formatPrice } = useAppContext();
+  const { user, isLoaded, formatPrice, fetchProductData } = useAppContext();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,8 @@ const ProductList = () => {
       if (data.success) {
         successToast("Product deleted successfully", "delete-product-success");
         setProducts((prev) => prev.filter((p) => p._id !== id));
+        // Sync global state
+        fetchProductData();
       } else {
         errorToast(data.message || "Failed to delete product", "delete-product-error");
       }
@@ -48,6 +50,8 @@ const ProductList = () => {
       )
     );
     setEditingProduct(null);
+    // Sync global AppContext so that 'Visit' page sees the new data immediately
+    fetchProductData();
   };
 
 
