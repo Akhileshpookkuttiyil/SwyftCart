@@ -11,6 +11,8 @@ import { normalizeProductRecord } from "@/lib/productCatalog";
 import { fetchSellerProductsRequest, deleteProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
 import EditProductModal from "@/components/seller/EditProductModal";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+
 
 const ProductList = () => {
   const { user, isLoaded, formatPrice } = useAppContext();
@@ -85,90 +87,109 @@ const ProductList = () => {
       {loading ? (
         <Loading />
       ) : (
-        <div className="w-full md:p-10 p-4">
-          <h2 className="pb-4 text-lg font-medium">All Product</h2>
-          <div className="flex flex-col items-center max-w-4xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
-            <table className="table-fixed w-full overflow-hidden">
-              <thead className="text-gray-900 text-sm text-left">
+        <div className="w-full md:px-10 py-6">
+          <h2 className="pb-6 text-xl font-semibold text-gray-800">Product Inventory</h2>
+          <div className="w-full overflow-x-auto rounded-xl bg-white border border-gray-200 shadow-sm">
+            <table className="table-auto w-full border-collapse">
+              <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider text-left border-b border-gray-200">
                 <tr>
-                  <th className="w-2/3 md:w-2/5 px-4 py-3 font-medium truncate">
-                    Product
+                  <th className="px-6 py-4 font-semibold min-w-[320px]">
+                    Product Details
                   </th>
-                  <th className="px-4 py-3 font-medium truncate max-sm:hidden">
+                  <th className="px-6 py-4 font-semibold max-sm:hidden">
                     Category
                   </th>
-                  <th className="px-4 py-3 font-medium truncate">Price</th>
-                  <th className="px-4 py-3 font-medium truncate max-sm:hidden">
-                    Action
+                  <th className="px-6 py-4 font-semibold">Price</th>
+                  <th className="px-6 py-4 font-semibold text-center">
+                    Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-500">
                 {!products.length && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                      No products found yet.
+                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
+                      No products available in your inventory.
                     </td>
                   </tr>
                 )}
-                {products.map((product) => (
-                  <tr key={product._id} className="border-t border-gray-500/20">
-                    <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
-                      <div className="bg-gray-500/10 rounded p-2">
-                        <Image
-                          src={product.image?.[0] || assets.upload_area}
-                          alt="product Image"
-                          className="w-16"
-                          width={1280}
-                          height={720}
-                        />
-                      </div>
-                      <span className="truncate w-full">{product.name}</span>
-                    </td>
-                    <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
-                    <td className="px-4 py-3">{formatPrice(product.offerPrice)}</td>
-                    <td className="px-4 py-3 max-sm:hidden">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/product/${product._id}`}
-                          className="flex items-center gap-1 px-1.5 md:px-3 text-sm py-1.5 bg-gray-500/10 text-gray-700 hover:bg-gray-500/20 rounded-md"
-                        >
-                          <span className="hidden md:block">Visit</span>
+                {products.map((product) => {
+                  const isOwner = product.userId === user?.id;
+                  return (
+                    <tr key={product._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/40 transition-colors">
+                      <td className="px-6 py-5 flex items-center gap-4">
+                        <div className="bg-gray-100 rounded-lg p-1 shrink-0 border border-gray-200">
                           <Image
-                            className="h-3.5 md:hidden"
-                            src={assets.redirect_icon}
-                            alt="redirect_icon"
+                            src={product.image?.[0] || assets.upload_area}
+                            alt={product.name}
+                            className="w-14 h-14 object-cover rounded-md"
+                            width={56}
+                            height={56}
                           />
-                        </Link>
-                        <button
-                          onClick={() => setEditingProduct(product)}
-                          className="flex items-center gap-1 px-1.5 md:px-3 text-sm py-1.5 bg-orange-600 text-white rounded-md"
-                        >
-                          <span className="hidden md:block">Edit</span>
-                          <span className="md:hidden">✏️</span>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product._id)}
-                          disabled={deletingId === product._id}
-                          className="flex items-center gap-1 px-1.5 md:px-3 text-sm py-1.5 bg-red-600 text-white rounded-md disabled:opacity-50"
-                        >
-                          <span className="hidden md:block">{deletingId === product._id ? '...' : 'Delete'}</span>
-                          <span className="md:hidden">🗑</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="truncate max-w-xs font-semibold text-gray-900 text-base">{product.name}</span>
+                          <span className="text-xs text-gray-400">ID: {product._id.slice(-8)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 max-sm:hidden">
+                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] uppercase font-bold tracking-tight">
+                            {product.category}
+                         </span>
+                      </td>
+                      <td className="px-6 py-5 font-bold text-gray-900 text-base">{formatPrice(product.offerPrice)}</td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center justify-center gap-2.5">
+                          <Link
+                            href={`/product/${product._id}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Visit</span>
+                          </Link>
+                          <button
+                            onClick={() => isOwner && setEditingProduct(product)}
+                            disabled={!isOwner}
+                            title={isOwner ? "Edit Product" : "Read-only"}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all active:scale-95 ${
+                              isOwner 
+                                ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100" 
+                                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed grayscale"
+                            }`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => isOwner && handleDelete(product._id)}
+                            disabled={!isOwner || deletingId === product._id}
+                            title={isOwner ? "Delete Product" : "Read-only"}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all active:scale-95 ${
+                              isOwner 
+                                ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" 
+                                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed grayscale"
+                            }`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>
+                              {deletingId === product._id ? '...' : 'Delete'}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
       {editingProduct && (
-        <EditProductModal 
-          product={editingProduct} 
-          onClose={() => setEditingProduct(null)} 
-          onUpdate={handleUpdate} 
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onUpdate={handleUpdate}
         />
       )}
       <Footer />

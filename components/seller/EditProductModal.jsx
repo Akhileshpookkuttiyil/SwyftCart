@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import Image from "next/image";
+import { assets } from "@/assets/assets";
 import { updateProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
 
@@ -8,6 +10,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
   const [category, setCategory] = useState(product?.category || "Earphone");
   const [price, setPrice] = useState(product?.price || "");
   const [offerPrice, setOfferPrice] = useState(product?.offerPrice || "");
+  const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,8 +23,9 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     formData.append("price", price);
     formData.append("offerPrice", offerPrice);
 
-    // Note: To keep things minimal, image updating is skipped in this basic edit form,
-    // only existing images remain. We could add file input similar to AddProduct.
+    files.forEach((file) => {
+      if (file) formData.append("images", file);
+    });
 
     try {
       setSubmitting(true);
@@ -51,6 +55,38 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-xl font-bold">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-base font-medium">Product Images</label>
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+              {[...Array(4)].map((_, index) => (
+                <label key={index} htmlFor={`edit-image${index}`}>
+                  <input
+                    onChange={(e) => {
+                      const updatedFiles = [...files];
+                      updatedFiles[index] = e.target.files?.[0] || null;
+                      setFiles(updatedFiles);
+                    }}
+                    type="file"
+                    id={`edit-image${index}`}
+                    accept="image/*"
+                    hidden
+                  />
+                  <Image
+                    className="w-20 h-20 object-cover rounded border border-gray-200 cursor-pointer"
+                    src={
+                      files[index]
+                        ? URL.createObjectURL(files[index])
+                        : product.image[index] || assets.upload_area
+                    }
+                    alt="Product preview"
+                    width={100}
+                    height={100}
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Click to replace or add new images</p>
+          </div>
           <div className="flex flex-col gap-1">
             <label className="text-base font-medium" htmlFor="edit-product-name">
               Product Name

@@ -4,7 +4,6 @@ const productSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true,
       ref: "User",
     },
     name: { type: String, required: true },
@@ -13,7 +12,16 @@ const productSchema = new mongoose.Schema(
     category: { type: String, required: true },
     offerPrice: { type: Number, required: true },
     rating: { type: Number, default: 4.5 },
-    image: [{ type: String, required: true }],
+    image: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: function(v) {
+          return Array.isArray(v) && v.length > 0;
+        },
+        message: 'A product must have at least one image.'
+      }
+    },
   },
   {
     timestamps: true,

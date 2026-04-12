@@ -19,20 +19,43 @@ const Product = () => {
 
   const [mainImage, setMainImage] = useState(null);
   const [productData, setProductData] = useState(null);
+  const [isFetchingLocal, setIsFetchingLocal] = useState(false);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
   useEffect(() => {
     const product = products.find((item) => item._id === id);
-    setProductData(product || null);
-    setMainImage(product?.image?.[0] || null);
-  }, [id, products]);
+    if (product) {
+      setProductData(product);
+      setMainImage(product.image?.[0] || null);
+    } else if (id && !productsLoading && !hasAttemptedFetch) {
+      // Fallback fetch if not in the global list (e.g. after re-seed)
+      const fetchSingleProduct = async () => {
+        try {
+          setIsFetchingLocal(true);
+          const response = await fetch(`/api/product/${id}`);
+          const data = await response.json();
+          if (data.success && data.product) {
+             setProductData(data.product);
+             setMainImage(data.product.image?.[0] || null);
+          }
+        } catch (error) {
+          console.error("Error fetching single product:", error);
+        } finally {
+          setIsFetchingLocal(false);
+          setHasAttemptedFetch(true);
+        }
+      };
+      fetchSingleProduct();
+    }
+  }, [id, products, productsLoading, hasAttemptedFetch]);
 
   const rating = Number(productData?.rating ?? 4.5);
 
-  if (productsLoading) {
+  if (productsLoading || (isFetchingLocal && !productData) || (id && !productData && !hasAttemptedFetch)) {
     return <Loading />;
   }
 
-  if (!productData) {
+  if (!productData && hasAttemptedFetch) {
     return (
       <>
         <Navbar />
@@ -61,7 +84,7 @@ const Product = () => {
           <div className="px-5 lg:px-16 xl:px-20">
             <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
               <Image
-                src={mainImage || productData.image[0]}
+                src={mainImage || productData.image[0] || assets.upload_area}
                 alt={productData.name}
                 className="w-full h-auto object-cover mix-blend-multiply"
                 width={1280}

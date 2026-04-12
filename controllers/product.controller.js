@@ -75,7 +75,6 @@ export const listSellerProductsController = withController(
     const userId = await requireSellerAuth(request);
     const searchParams = request.nextUrl.searchParams;
     const result = await fetchSellerProducts({
-      userId,
       ...getProductQueryOptions(searchParams),
     });
 
@@ -112,6 +111,10 @@ export const createProductController = withController(
 
     const image = await uploadImagesToCloudinary(files);
 
+    if (!image || image.length === 0) {
+      throw new AppError("At least one product image is required", 400);
+    }
+
     const product = await createProduct({
       userId,
       name,
@@ -140,7 +143,7 @@ export const createProductController = withController(
 export const updateProductController = withController(
   async (request, { params }) => {
     const userId = await requireSellerAuth(request);
-    
+
     // We expect params to be a Promise in Next.js 15, or we can just destructure it directly in Next.js 14
     // Wait, the params might be direct in route.js, let's just make sure we handle it.
     const { id } = params || {};
@@ -191,7 +194,7 @@ export const deleteProductController = withController(
   async (request, { params }) => {
     const userId = await requireSellerAuth(request);
     const { id } = params || {};
-    
+
     if (!id) throw new AppError("Product ID is required", 400);
 
     const isDeleted = await deleteProduct(id, userId);
