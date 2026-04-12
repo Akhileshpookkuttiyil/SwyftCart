@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
@@ -76,6 +77,9 @@ const HeaderSlider = () => {
                 className="md:w-72 w-48"
                 src={slide.imgSrc}
                 alt={`Slide ${index + 1}`}
+                priority={index === 0}
+                placeholder="blur"
+                sizes="(max-width: 768px) 50vw, 300px"
               />
             </div>
           </div>
