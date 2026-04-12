@@ -164,12 +164,22 @@ export const updateProductController = withController(
     if (category) updateData.category = category;
     if (offerPrice) updateData.offerPrice = Number(offerPrice);
 
-    const files = formData
-      .getAll("images")
-      .filter((file) => typeof file?.arrayBuffer === "function" && file.size > 0);
-
-    if (files.length > 0) {
-      updateData.image = await uploadImagesToCloudinary(files);
+    const imageItems = formData.getAll("images");
+    if (imageItems.length > 0) {
+      // Process all image items in parallel to prevent timeouts
+      const processedImages = await Promise.all(
+        imageItems.map(async (item) => {
+          if (typeof item === 'string' && item.startsWith('http')) {
+            return item; // It's an existing URL
+          } else if (item && typeof item.arrayBuffer === 'function' && item.size > 0) {
+            // It's a new file upload
+            const uploaded = await uploadImagesToCloudinary([item]);
+            return uploaded[0];
+          }
+          return null;
+        })
+      );
+      updateData.image = processedImages.filter(Boolean);
     } // Note: Without new images, the existing image array remains unchanged in DB
 
     const updatedProduct = await updateProduct(id, userId, updateData);

@@ -10,7 +10,9 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
   const [category, setCategory] = useState(product?.category || "Earphone");
   const [price, setPrice] = useState(product?.price || "");
   const [offerPrice, setOfferPrice] = useState(product?.offerPrice || "");
-  const [files, setFiles] = useState([]);
+  const [imageSlots, setImageSlots] = useState(
+    Array.from({ length: 4 }).map((_, i) => product?.image?.[i] || null)
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -22,9 +24,10 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     formData.append("category", category);
     formData.append("price", price);
     formData.append("offerPrice", offerPrice);
+    // Note: userId is retrieved directly from the Auth Token on the backend for security
 
-    files.forEach((file) => {
-      if (file) formData.append("images", file);
+    imageSlots.forEach((item) => {
+      if (item) formData.append("images", item);
     });
 
     try {
@@ -58,13 +61,16 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
           <div className="flex flex-col gap-1">
             <label className="text-base font-medium">Product Images</label>
             <div className="flex flex-wrap items-center gap-3 mt-2">
-              {[...Array(4)].map((_, index) => (
+              {imageSlots.map((item, index) => (
                 <label key={index} htmlFor={`edit-image${index}`}>
                   <input
                     onChange={(e) => {
-                      const updatedFiles = [...files];
-                      updatedFiles[index] = e.target.files?.[0] || null;
-                      setFiles(updatedFiles);
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const updatedSlots = [...imageSlots];
+                        updatedSlots[index] = file;
+                        setImageSlots(updatedSlots);
+                      }
                     }}
                     type="file"
                     id={`edit-image${index}`}
@@ -74,9 +80,9 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                   <Image
                     className="w-20 h-20 object-cover rounded border border-gray-200 cursor-pointer"
                     src={
-                      files[index]
-                        ? URL.createObjectURL(files[index])
-                        : product.image[index] || assets.upload_area
+                      item instanceof File
+                        ? URL.createObjectURL(item)
+                        : item || assets.upload_area
                     }
                     alt="Product preview"
                     width={100}
