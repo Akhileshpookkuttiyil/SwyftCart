@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import connectDB from "@/config/db";
-import Product from "@/models/product";
+import Product from "@/models/Product";
 import User from "@/models/User";
 import { AppError } from "@/lib/api-response";
 

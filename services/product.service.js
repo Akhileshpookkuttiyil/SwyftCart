@@ -1,5 +1,5 @@
 import connectDB from "@/config/db";
-import Product from "@/models/product";
+import Product from "@/models/Product";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;

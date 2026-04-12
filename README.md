@@ -52,7 +52,7 @@ SwyftCart follows a single-repo Next.js architecture with the App Router as the 
 - `middleware.ts` applies Clerk middleware across app and API routes
 - `config/db.js` manages a cached MongoDB connection for server-side handlers and background functions
 - `config/inngest.js` defines event-driven background functions that keep the local `User` collection in sync with Clerk lifecycle events
-- `models/User.js` and `models/product.js` provide the current persisted domain models; address and order data are still mocked in the UI layer
+- `models/User.js` and `models/Product.js` provide the current persisted domain models; address and order data are still mocked in the UI layer
 
 ### Current Request/Data Flow
 
