@@ -5,8 +5,7 @@ import User from "@/models/User";
 export const inngest = new Inngest({ id: "swyftcart-next" });
 
 export const syncUserCreation = inngest.createFunction(
-  { id: "sync-user-from-clerk" },
-  { event: "clerk/user.created" },
+  { id: "sync-user-from-clerk", triggers: { event: "clerk/user.created" } },
   async ({ event }) => {
     const {
       id,
@@ -29,8 +28,7 @@ export const syncUserCreation = inngest.createFunction(
 );
 
 export const syncUserUpdation = inngest.createFunction(
-  { id: "update-user-from-clerk" },
-  { event: "clerk/user.updated" },
+  { id: "update-user-from-clerk", triggers: { event: "clerk/user.updated" } },
   async ({ event }) => {
     const {
       id,
@@ -52,8 +50,7 @@ export const syncUserUpdation = inngest.createFunction(
 );
 
 export const syncUserDeletion = inngest.createFunction(
-  { id: "delete-user-with-clerk" },
-  { event: "clerk/user.deleted" },
+  { id: "delete-user-with-clerk", triggers: { event: "clerk/user.deleted" } },
   async ({ event }) => {
     const { id } = event.data;
     await connectDB();

@@ -83,6 +83,19 @@ export const AppContextProvider = ({ children }) => {
     favoritesRef.current = favorites;
   }, [favorites]);
 
+  // One-time cleanup of guest carts/favorites to remove dummy products
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const MIGRATION_KEY = "swyftcart_migration_v2";
+    if (!localStorage.getItem(MIGRATION_KEY)) {
+      localStorage.removeItem(GUEST_CART_KEY);
+      localStorage.removeItem(GUEST_FAVORITES_KEY);
+      localStorage.setItem(MIGRATION_KEY, "true");
+      setCartItems({});
+      setFavorites([]);
+    }
+  }, []);
+
   const getGuestCartFromStorage = useCallback(() => {
     if (typeof window === "undefined") return {};
     try {

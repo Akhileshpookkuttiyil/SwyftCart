@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
+import { Show, UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppContext } from "@/context/AppContext";
 import { assets, BoxIcon, CartIcon, HeartIcon } from "@/assets/assets";
 import NavbarSearch from "./NavbarSearch";
@@ -86,15 +86,15 @@ const Navbar = () => {
         </Link>
 
         {/* Auth Controls */}
-        <SignedOut>
+        <Show when="signed-out">
           <SignInButton>
             <button className="px-4 py-1.5 text-sm bg-gray-200 text-white rounded-full hover:bg-gray-400 transition">
               Sign In
             </button>
           </SignInButton>
-        </SignedOut>
+        </Show>
 
-        <SignedIn>
+        <Show when="signed-in">
           <UserButton
             appearance={{
               elements: {
@@ -117,7 +117,7 @@ const Navbar = () => {
               />
             </UserButton.MenuItems>
           </UserButton>
-        </SignedIn>
+        </Show>
 
         {/* Mobile Hamburger */}
         <button

@@ -1,18 +1,50 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Ensure Tailwind scans all relevant folders */
+@source "../components/**/*.{js,jsx,ts,tsx}";
+@source "../app/**/*.{js,jsx,ts,tsx}";
+
+@theme {
+  /* Restore Tailwind 3 Gray Palette using RGB for perfect opacity support */
+  --color-gray-50: rgb(249 250 251);
+  --color-gray-100: rgb(243 244 246);
+  --color-gray-200: rgb(229 231 235);
+  --color-gray-300: rgb(209 213 223);
+  --color-gray-400: rgb(156 163 175);
+  --color-gray-500: rgb(107 114 128);
+  --color-gray-600: rgb(75 85 99);
+  --color-gray-700: rgb(55 65 81);
+  --color-gray-800: rgb(31 41 55);
+  --color-gray-900: rgb(17 24 39);
+  --color-gray-950: rgb(3 7 18);
+
+  /* Set default border color to gray-200 (V3 default) */
+  --color-border: var(--color-gray-200);
+
+  /* Theme overrides */
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --grid-template-columns-auto: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+
 
 * {
     scroll-behavior: smooth;
 }
 
 @layer base {
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: #e5e7eb;
   }
+  
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 
 ::-webkit-scrollbar {
   display: none;
