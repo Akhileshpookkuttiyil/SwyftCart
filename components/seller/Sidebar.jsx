@@ -1,45 +1,65 @@
 import React from 'react';
 import Link from 'next/link';
-import { assets } from '../../assets/assets';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { 
+  LayoutDashboard, 
+  PackagePlus, 
+  Boxes, 
+  ShoppingBag, 
+  LogOut 
+} from 'lucide-react';
 
-const SideBar = () => {
-    const pathname = usePathname()
+const Sidebar = () => {
+    const pathname = usePathname();
+    const { signOut } = useAuth();
+    
     const menuItems = [
-        { name: 'Add Product', path: '/seller', icon: assets.add_icon },
-        { name: 'Product List', path: '/seller/product-list', icon: assets.product_list_icon },
-        { name: 'Orders', path: '/seller/orders', icon: assets.order_icon },
+        { name: 'Dashboard', path: '/seller/dashboard', icon: LayoutDashboard },
+        { name: 'Add Product', path: '/seller', icon: PackagePlus },
+        { name: 'Product List', path: '/seller/product-list', icon: Boxes },
+        { name: 'Orders', path: '/seller/orders', icon: ShoppingBag },
     ];
 
     return (
-        <div className='md:w-64 w-16 border-r min-h-screen text-base border-gray-300 py-2 flex flex-col'>
-            {menuItems.map((item) => {
+        <div className='md:w-64 w-16 border-r h-full bg-white text-sm border-gray-200 flex flex-col'>
+            {/* Navigation Section */}
+            <div className="flex-1 space-y-0.5">
+                {menuItems.map((item) => {
+                    const isActive = pathname === item.path;
+                    const Icon = item.icon;
 
-                const isActive = pathname === item.path;
+                    return (
+                        <Link href={item.path} key={item.name} passHref>
+                            <div
+                                className={
+                                    `flex items-center py-3 px-6 gap-3 transition-colors duration-150 cursor-pointer border-l-4 ${isActive
+                                        ? "bg-gray-50 text-gray-900 font-semibold border-gray-900"
+                                        : "text-gray-500 hover:bg-gray-50/80 hover:text-gray-900 border-transparent"
+                                    }`
+                                }
+                            >
+                                <Icon className={`w-4 h-4 ${isActive ? "text-gray-900" : "text-gray-400"}`} />
+                                <p className='md:block hidden whitespace-nowrap'>{item.name}</p>
+                            </div>
+                        </Link>
+                    );
+                })}
+            </div>
 
-                return (
-                    <Link href={item.path} key={item.name} passHref>
-                        <div
-                            className={
-                                `flex items-center py-3 px-4 gap-3 ${isActive
-                                    ? "border-r-4 md:border-r-[6px] bg-orange-600/10 border-orange-500/90"
-                                    : "hover:bg-gray-100/90 border-white"
-                                }`
-                            }
-                        >
-                            <Image
-                                src={item.icon}
-                                alt={`${item.name.toLowerCase()}_icon`}
-                                className="w-7 h-7"
-                            />
-                            <p className='md:block hidden text-center'>{item.name}</p>
-                        </div>
-                    </Link>
-                );
-            })}
+            {/* Logout Section at Bottom */}
+            <div className="pt-2 border-t border-gray-100">
+                <button
+                    onClick={() => signOut()}
+                    className="flex items-center w-full py-3 px-6 gap-3 text-gray-500 hover:bg-rose-50 hover:text-rose-600 transition-colors duration-150 border-l-4 border-transparent"
+                >
+                    <LogOut className="w-4 h-4" />
+                    <p className='md:block hidden font-medium'>Logout</p>
+                </button>
+            </div>
         </div>
     );
+
 };
 
-export default SideBar;
+export default Sidebar;

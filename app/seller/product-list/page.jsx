@@ -5,7 +5,7 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppContext } from "@/context/AppContext";
-import Footer from "@/components/seller/Footer";
+
 import Loading from "@/components/Loading";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 import { fetchSellerProductsRequest, deleteProductRequest } from "@/lib/api/products";
@@ -119,70 +119,65 @@ const ProductList = () => {
                 )}
                 {products.map((product) => {
                   const isOwner = product.userId === user?.id;
-                  return (
-                    <tr key={product._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/40 transition-colors">
-                      <td className="px-6 py-5 flex items-center gap-4">
-                        <div className="bg-gray-100 rounded-lg p-1 shrink-0 border border-gray-200">
-                          <Image
-                            src={product.image?.[0] || assets.upload_area}
-                            alt={product.name}
-                            className="w-14 h-14 object-cover rounded-md"
-                            width={56}
-                            height={56}
-                          />
-                        </div>
-                        <div className="flex flex-col truncate">
-                          <span className="truncate max-w-xs font-semibold text-gray-900 text-base">{product.name}</span>
-                          <span className="text-xs text-gray-400">ID: {product._id.slice(-8)}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 max-sm:hidden">
-                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] uppercase font-bold tracking-tight">
-                            {product.category}
-                         </span>
-                      </td>
-                      <td className="px-6 py-5 font-bold text-gray-900 text-base">{formatPrice(product.offerPrice)}</td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center justify-center gap-2.5">
-                          <Link
-                            href={`/product/${product._id}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Visit</span>
-                          </Link>
-                          <button
-                            onClick={() => isOwner && setEditingProduct(product)}
-                            disabled={!isOwner}
-                            title={isOwner ? "Edit Product" : "Read-only"}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all active:scale-95 ${
-                              isOwner 
-                                ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100" 
-                                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed grayscale"
-                            }`}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            onClick={() => isOwner && handleDelete(product._id)}
-                            disabled={!isOwner || deletingId === product._id}
-                            title={isOwner ? "Delete Product" : "Read-only"}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all active:scale-95 ${
-                              isOwner 
-                                ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" 
-                                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed grayscale"
-                            }`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>
+                    return (
+                      <tr key={product._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors group">
+                        <td className="px-6 py-4 flex items-center gap-4">
+                          <div className="bg-gray-50 rounded-lg p-1 shrink-0 border border-gray-100 group-hover:bg-white transition-colors">
+                            <Image
+                              src={product.image?.[0] || assets.upload_area}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-md"
+                              width={48}
+                              height={48}
+                            />
+                          </div>
+                          <div className="flex flex-col truncate">
+                            <span className="truncate max-w-xs font-medium text-gray-900 text-sm">{product.name}</span>
+                            <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase mt-0.5">#{product._id.slice(-8)}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 max-sm:hidden">
+                           <span className="px-2 py-0.5 bg-gray-100/80 text-gray-500 rounded text-[10px] uppercase font-bold tracking-tight">
+                              {product.category}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-gray-900 text-sm whitespace-nowrap">{formatPrice(product.offerPrice)}</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/product/${product._id}`}
+                              className="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all flex items-center gap-1.5"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Visit</span>
+                            </Link>
+                            <button
+                              onClick={() => isOwner && setEditingProduct(product)}
+                              disabled={!isOwner}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-all ${
+                                isOwner 
+                                  ? "border-gray-200 bg-white text-gray-700 hover:bg-gray-50" 
+                                  : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                              }`}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => isOwner && handleDelete(product._id)}
+                              disabled={!isOwner || deletingId === product._id}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-all ${
+                                isOwner 
+                                  ? "border-rose-100 bg-rose-50/50 text-rose-600 hover:bg-rose-50" 
+                                  : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                              }`}
+                            >
                               {deletingId === product._id ? '...' : 'Delete'}
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+
                 })}
               </tbody>
             </table>
@@ -196,8 +191,8 @@ const ProductList = () => {
           onUpdate={handleUpdate}
         />
       )}
-      <Footer />
     </div>
+
   );
 };
 
