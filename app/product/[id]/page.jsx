@@ -93,14 +93,14 @@ const Product = () => {
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-              {productData.image.map((image, index) => (
+              {(productData.image || []).map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setMainImage(image)}
                   className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
                 >
                   <Image
-                    src={image}
+                    src={image || assets.upload_area}
                     alt={`${productData.name} preview ${index + 1}`}
                     className="w-full h-auto object-cover mix-blend-multiply"
                     width={1280}

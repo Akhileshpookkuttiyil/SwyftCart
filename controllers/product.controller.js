@@ -12,6 +12,7 @@ import {
   fetchSellerProducts,
   updateProduct,
   deleteProduct,
+  fetchProductById,
 } from "@/services/product.service";
 
 const getStringParam = (searchParams, key) => {
@@ -222,3 +223,27 @@ export const deleteProductController = withController(
     context: "DELETE /api/product/[id]",
   }
 );
+
+export const getProductController = withController(
+  async (request, { params }) => {
+    const { id } = (await params) || {};
+
+    if (!id) throw new AppError("Product ID is required", 400);
+
+    const product = await fetchProductById(id);
+
+    if (!product) {
+      throw new AppError("Product not found", 404);
+    }
+
+    return createSuccessResponse({
+      success: true,
+      product,
+    });
+  },
+  {
+    fallbackMessage: "Failed to fetch product",
+    context: "GET /api/product/[id]",
+  }
+);
+
