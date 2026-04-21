@@ -7,6 +7,7 @@ import { addProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
 
 const AddProduct = () => {
+  const { currency } = useAppContext();
   const [files, setFiles] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -164,7 +165,7 @@ const AddProduct = () => {
                   Base Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-400 text-sm">$</span>
+                  <span className="absolute left-3 top-2.5 text-gray-400 text-sm">{currency}</span>
                   <input
                     id="product-price"
                     type="number"
@@ -182,7 +183,7 @@ const AddProduct = () => {
                   Offer Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-400 text-sm">$</span>
+                  <span className="absolute left-3 top-2.5 text-gray-400 text-sm">{currency}</span>
                   <input
                     id="offer-price"
                     type="number"
