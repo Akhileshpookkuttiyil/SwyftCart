@@ -1,10 +1,12 @@
 import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
+import { placeOrderRequest } from "@/lib/api/order";
+import { errorToast, successToast } from "@/lib/toast";
 
 const OrderSummary = () => {
 
-  const { formatPrice, router, getCartCount, getCartAmount } = useAppContext()
+  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -20,7 +22,21 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
+    if (!selectedAddress) {
+        return errorToast("Please select a delivery address", "address-error");
+    }
 
+    try {
+        const data = await placeOrderRequest(selectedAddress);
+        if (data.success) {
+            successToast("Order placed successfully!", "order-success");
+            // Refresh user data (for cart clearing)
+            fetchUserData();
+            router.push('/order-placed');
+        }
+    } catch (error) {
+        console.error("Place order error:", error);
+    }
   }
 
   useEffect(() => {
