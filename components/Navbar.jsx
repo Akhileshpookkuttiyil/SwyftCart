@@ -64,13 +64,6 @@ const Navbar = () => {
           <NavbarSearch />
         </div>
 
-
-
-
-
-
-
-
         {/* Cart */}
         <Link
           href="/cart"
