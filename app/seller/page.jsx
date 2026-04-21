@@ -5,6 +5,7 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { addProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
+import { useAppContext } from "@/context/AppContext";
 
 const AddProduct = () => {
   const { currency } = useAppContext();
