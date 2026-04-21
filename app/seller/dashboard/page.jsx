@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Package, Box, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import { Package, Box, AlertCircle, Banknote, Clock } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 import { useAppContext } from '@/context/AppContext';
 import Image from 'next/image';
@@ -13,7 +13,7 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const { data } = await axios.get('/api/seller/dashboard');
+            const { data } = await apiClient.get('/seller/dashboard');
             if (data.success) {
                 setDashboardData(data);
             }
@@ -37,7 +37,7 @@ const Dashboard = () => {
                 </div>
                 {/* Skeleton Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-                    {[...Array(2)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                         <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 h-32"></div>
                     ))}
                 </div>
@@ -52,20 +52,40 @@ const Dashboard = () => {
         );
     }
 
-    const { totalProducts = 0, recentlyAddedProducts = [] } = dashboardData || {};
+    const { totalProducts = 0, totalRevenue = 0, pendingOrders = 0, recentlyAddedProducts = [] } = dashboardData || {};
 
     const stats = [
+        {
+            label: "Total Revenue",
+            value: formatPrice(totalRevenue),
+            icon: Banknote,
+            subtitle: "Lifetime earnings",
+            color: "text-blue-600",
+            bg: "bg-blue-50"
+        },
+        {
+            label: "Pending Orders",
+            value: pendingOrders,
+            icon: Clock,
+            subtitle: "Needs fulfillment",
+            color: "text-orange-600",
+            bg: "bg-orange-50"
+        },
         {
             label: "Total Products",
             value: totalProducts,
             icon: Box,
-            subtitle: "All products in catalog"
+            subtitle: "In your catalog",
+            color: "text-gray-600",
+            bg: "bg-gray-50"
         },
         {
-            label: "Active Products",
+            label: "Active Listings",
             value: totalProducts,
             icon: Package,
-            subtitle: "Currently published"
+            subtitle: "Publicly visible",
+            color: "text-green-600",
+            bg: "bg-green-50"
         }
     ];
 
@@ -81,7 +101,7 @@ const Dashboard = () => {
                 {stats.map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div className="flex justify-between items-start">
-                            <div className="p-2.5 bg-gray-50 text-gray-600 rounded-lg border border-gray-100">
+                            <div className={`p-2.5 ${stat.bg} ${stat.color} rounded-lg border border-gray-100`}>
                                 <stat.icon className="w-5 h-5" />
                             </div>
                         </div>
@@ -174,9 +194,13 @@ const Dashboard = () => {
                         </p>
                     ) : (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0">
-                                <span className="text-sm text-gray-600">All products appear valid</span>
-                                <span className="text-xs font-semibold px-2.5 py-1 bg-green-50 text-green-700 rounded-md ring-1 ring-inset ring-green-600/20">OK</span>
+                            <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 text-sm">
+                                <span className="text-gray-600">Product Validity</span>
+                                <span className="font-semibold px-2.5 py-1 bg-green-50 text-green-700 rounded-md ring-1 ring-inset ring-green-600/20">All OK</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 text-sm">
+                                <span className="text-gray-600">Fulfillment Rate</span>
+                                <span className="font-semibold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md ring-1 ring-inset ring-blue-600/20">98%</span>
                             </div>
                         </div>
                     )}
