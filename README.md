@@ -7,6 +7,7 @@ SwyftCart is a production-ready **Next.js 15 eCommerce ecosystem** designed for 
 ## 🚀 Key Features
 
 ### 🛒 Buyer Experience
+
 - **Dynamic Storefront**: A responsive, mobile-first shopping experience built with React 19 and Tailwind CSS 4.
 - **Smart Search & Filtering**: Real-time product discovery across categories with integrated search functionality.
 - **Persistent Cart**: Integrated cart system that persists across sessions via MongoDB, ensuring users never lose their selections.
@@ -15,12 +16,14 @@ SwyftCart is a production-ready **Next.js 15 eCommerce ecosystem** designed for 
 - **Personalized Accounts**: Order history tracking and a dedicated "Favourites" wishlist system.
 
 ### 📊 Seller Dashboard
+
 - **Business Intelligence**: Real-time analytics showing total revenue, active product counts, and pending order metrics.
 - **Inventory Lifecycle**: Full CRUD operations for products, including multi-image uploads and price management (original vs. offer prices).
 - **Order Management**: Dedicated interface to track customer orders, update fulfillment statuses, and manage deliveries.
 - **Role-Based Security**: Seller routes are strictly gated, ensuring only authorized merchants can access business tools.
 
 ### ⚙️ System & Infrastructure
+
 - **Clerk Auth & Sync**: Secure authentication with automated user synchronization between Clerk and MongoDB via **Inngest** webhooks.
 - **Event-Driven Architecture**: Background jobs handle critical lifecycle events (user creation/deletion) without blocking the UI.
 - **Standardized API**: Robust backend architecture using a Controller-Service pattern with consistent error handling and response structures.
@@ -30,16 +33,16 @@ SwyftCart is a production-ready **Next.js 15 eCommerce ecosystem** designed for 
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| **Framework** | Next.js 15 (App Router), React 19 |
-| **Styling** | Tailwind CSS 4.0, Lucide React |
-| **Backend** | Next.js Route Handlers (Edge-ready) |
-| **Database** | MongoDB Atlas, Mongoose ODM |
-| **Auth** | Clerk (Middleware-secured) |
-| **Workflows** | Inngest (Serverless Queues & Webhooks) |
-| **Storage** | Cloudinary (Product Media) |
-| **Communication** | Axios, React Hot Toast |
+| Layer             | Technology                             |
+| ----------------- | -------------------------------------- |
+| **Framework**     | Next.js 15 (App Router), React 19      |
+| **Styling**       | Tailwind CSS 4.0, Lucide React         |
+| **Backend**       | Next.js Route Handlers (Edge-ready)    |
+| **Database**      | MongoDB Atlas, Mongoose ODM            |
+| **Auth**          | Clerk (Middleware-secured)             |
+| **Workflows**     | Inngest (Serverless Queues & Webhooks) |
+| **Storage**       | Cloudinary (Product Media)             |
+| **Communication** | Axios, React Hot Toast                 |
 
 ---
 
@@ -80,6 +83,7 @@ SwyftCart/
 ## ⚙️ Setup & Installation
 
 ### Prerequisites
+
 - Node.js 18+ (LTS recommended)
 - [Clerk Account](https://clerk.com) for Auth
 - [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
@@ -87,6 +91,7 @@ SwyftCart/
 - [Cloudinary](https://cloudinary.com) for image hosting
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/Akhileshpookkuttiyil/SwyftCart.git
 cd SwyftCart
@@ -94,6 +99,7 @@ npm install
 ```
 
 ### 2. Environment Configuration
+
 Create a `.env.local` file in the root and add the following:
 
 ```env
@@ -118,6 +124,7 @@ NEXT_PUBLIC_CURRENCY=₹
 ```
 
 ### 3. Running Locally
+
 ```bash
 # Start Next.js (with Turbopack)
 npm run dev
@@ -125,21 +132,22 @@ npm run dev
 # Start Inngest Dev Server (In a new terminal)
 npx inngest-cli@latest dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ---
 
 ## 📡 API Overview
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/api/user/data` | Fetch authenticated user profile & cart |
-| `POST` | `/api/cart` | Update user's persistent cart items |
-| `GET` | `/api/product/list` | Retrieve all active products |
-| `POST` | `/api/order/place` | Submit new order from cart |
-| `GET` | `/api/order/list` | Fetch buyer's order history |
-| `GET` | `/api/seller/dashboard`| Fetch merchant analytics |
-| `POST` | `/api/inngest` | Webhook endpoint for Clerk sync |
+| Method | Endpoint                | Description                             |
+| ------ | ----------------------- | --------------------------------------- |
+| `GET`  | `/api/user/data`        | Fetch authenticated user profile & cart |
+| `POST` | `/api/cart`             | Update user's persistent cart items     |
+| `GET`  | `/api/product/list`     | Retrieve all active products            |
+| `POST` | `/api/order/place`      | Submit new order from cart              |
+| `GET`  | `/api/order/list`       | Fetch buyer's order history             |
+| `GET`  | `/api/seller/dashboard` | Fetch merchant analytics                |
+| `POST` | `/api/inngest`          | Webhook endpoint for Clerk sync         |
 
 ---
 
@@ -156,6 +164,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ## 🤝 Project Status
 
 SwyftCart is a live project. While core commerce flows (Order -> Payment -> Fulfillment) are functional, we are consistently adding:
+
 - **Real Payment Integration**: Stripe/Razorpay scaffolding.
 - **Admin Panel**: Global system monitoring.
 - **Notifications**: Email & SMS alerts for order updates.
