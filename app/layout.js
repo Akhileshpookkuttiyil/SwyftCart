@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AppContextProvider } from "@/context/AppContext";
 import { Toaster } from "react-hot-toast";
+import Providers from "@/lib/Providers";
 
 const outfit = Outfit({ 
   subsets: ["latin"], 
@@ -19,10 +20,12 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.className} antialiased text-gray-700`}>
         <ClerkProvider>
-          <AppContextProvider>
-            <Toaster position="bottom-right" />
-            {children}
-          </AppContextProvider>
+          <Providers>
+            <AppContextProvider>
+              <Toaster position="bottom-right" />
+              {children}
+            </AppContextProvider>
+          </Providers>
         </ClerkProvider>
       </body>
     </html>

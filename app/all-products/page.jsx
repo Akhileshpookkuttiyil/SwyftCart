@@ -8,6 +8,7 @@ import { useAppContext } from "@/context/AppContext";
 import { fetchProductListRequest } from "@/lib/api/products";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 import { errorToast } from "@/lib/toast";
+import { useProducts } from "@/hooks/useProducts";
 
 const RECENT_SEARCHES_KEY = "swyftcart_recent_searches";
 
@@ -28,7 +29,11 @@ const highlightMatch = (text, query) => {
 };
 
 const AllProducts = () => {
-  const { products, productsLoading } = useAppContext();
+  const [page, setPage] = useState(1);
+  const { data: productsData, isLoading: productsLoading, isError } = useProducts({ page, limit: 10 });
+  const products = productsData?.products || [];
+  const pagination = productsData?.pagination;
+
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -176,11 +181,32 @@ const AllProducts = () => {
         ) : searchLoading ? (
           <div className="w-full py-12 text-gray-500">Searching products...</div>
         ) : visibleProducts.length ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-12 pb-14 w-full">
-            {visibleProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-12 pb-8 w-full">
+              {visibleProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+            {!debouncedSearch && pagination && pagination.totalPages > 1 && (
+              <div className="flex justify-center w-full gap-4 pb-14">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="py-2">Page {page} of {pagination.totalPages}</span>
+                <button
+                  disabled={page === pagination.totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full py-16 text-center text-gray-500">
             {debouncedSearch

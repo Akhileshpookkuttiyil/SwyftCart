@@ -1,5 +1,4 @@
 "use client";
-
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +13,7 @@ import {
 import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 import { setAuthTokenGetter } from "@/lib/apiClient";
+import { useProducts } from "@/hooks/useProducts";
 import {
   addToCartRequest,
   clearCartRequest,
@@ -24,7 +24,6 @@ import {
   mergeGuestFavoritesRequest,
   toggleFavoriteRequest,
 } from "@/lib/api/favorites";
-import { fetchProductListRequest } from "@/lib/api/products";
 import { fetchCurrentUserRequest } from "@/lib/api/user";
 import { errorToast, successToast } from "@/lib/toast";
 
@@ -64,8 +63,9 @@ export const AppContextProvider = ({ children }) => {
   const { user, isLoaded } = useUser();
   const { getToken, isSignedIn, signOut } = useAuth();
 
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const { data: productData, isLoading: productsLoading, refetch: fetchProductData } = useProducts({ limit: 50 });
+  const products = productData?.products || [];
+
   const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
@@ -131,29 +131,7 @@ export const AppContextProvider = ({ children }) => {
     localStorage.removeItem(GUEST_FAVORITES_KEY);
   }, []);
 
-  const fetchProductData = useCallback(async (isRetry = false) => {
-    setProductsLoading(true);
-    try {
-      const data = await fetchProductListRequest();
-      if (data.success) {
-        setProducts((data.products || []).map(normalizeProductRecord));
-      } else {
-        setProducts([]);
-      }
-    } catch (error) {
-      // Transient cold-start failures (network not ready yet): retry once silently
-      const isTransient = error?.status === 0 || error?.status === 503;
-      if (isTransient && !isRetry) {
-        setTimeout(() => fetchProductData(true), 2000);
-        return;
-      }
-      // Real error — log the actual message, not a plain object
-      console.error("Error fetching products:", error?.message || error);
-      setProducts([]);
-    } finally {
-      setProductsLoading(false);
-    }
-  }, []);
+
 
   const fetchUserData = useCallback(async () => {
     if (!isSignedIn || !isLoaded) return;
@@ -184,13 +162,11 @@ export const AppContextProvider = ({ children }) => {
   const updateCartQuantity = useCallback(
     async (itemId, quantity) => {
       if (!isSignedIn) {
-        let next = {};
-        setCartItems((prev) => {
-          next = { ...prev };
-          if (quantity <= 0) delete next[itemId];
-          else next[itemId] = Math.floor(quantity);
-          return next;
-        });
+        const prev = cartRef.current;
+        const next = { ...prev };
+        if (quantity <= 0) delete next[itemId];
+        else next[itemId] = Math.floor(quantity);
+        setCartItems(next);
         persistGuestState(next, favoritesRef.current);
         return;
       }
@@ -230,11 +206,9 @@ export const AppContextProvider = ({ children }) => {
   const addToCart = useCallback(
     async (itemId) => {
       if (!isSignedIn) {
-        let next = {};
-        setCartItems((prev) => {
-          next = { ...prev, [itemId]: (prev[itemId] || 0) + 1 };
-          return next;
-        });
+        const prev = cartRef.current;
+        const next = { ...prev, [itemId]: (prev[itemId] || 0) + 1 };
+        setCartItems(next);
         persistGuestState(next, favoritesRef.current);
         successToast("Added to cart", "cart-success");
         return;
@@ -291,12 +265,10 @@ export const AppContextProvider = ({ children }) => {
   const toggleWishlist = useCallback(
     async (itemId) => {
       if (!isSignedIn) {
-        let next = [];
-        setFavorites((prev) => {
-          const exists = prev.includes(itemId);
-          next = exists ? prev.filter((id) => id !== itemId) : [...prev, itemId];
-          return next;
-        });
+        const prev = favoritesRef.current;
+        const exists = prev.includes(itemId);
+        const next = exists ? prev.filter((id) => id !== itemId) : [...prev, itemId];
+        setFavorites(next);
         persistGuestState(cartRef.current, next);
         successToast(
           next.includes(itemId) ? "Added to favorites" : "Removed from favorites",
@@ -366,10 +338,6 @@ export const AppContextProvider = ({ children }) => {
   }, [getToken]);
 
   useEffect(() => {
-    fetchProductData();
-  }, [fetchProductData]);
-
-  useEffect(() => {
     if (!isLoaded) return;
 
     if (isSignedIn) {
@@ -433,10 +401,7 @@ export const AppContextProvider = ({ children }) => {
     isSignedIn,
   ]);
 
-  useEffect(() => {
-    if (!isLoaded || isSignedIn) return;
-    persistGuestState(cartItems, favorites);
-  }, [cartItems, favorites, isLoaded, isSignedIn, persistGuestState]);
+
 
   useEffect(
     () => () => {

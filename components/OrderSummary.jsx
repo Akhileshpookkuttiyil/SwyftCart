@@ -6,9 +6,11 @@ import { errorToast, successToast } from "@/lib/toast";
 
 const OrderSummary = () => {
 
-  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData } = useAppContext()
+  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData, cartItems } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   const [userAddresses, setUserAddresses] = useState([]);
 
@@ -21,21 +23,100 @@ const OrderSummary = () => {
     setIsDropdownOpen(false);
   };
 
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => setIsScriptLoaded(true);
+      script.onerror = () => console.error("Failed to load Razorpay script");
+      document.body.appendChild(script);
+    };
+    loadRazorpayScript();
+  }, []);
+
   const createOrder = async () => {
     if (!selectedAddress) {
         return errorToast("Please select a delivery address", "address-error");
     }
+    const items = Object.keys(cartItems).map(id => ({
+      product: id,
+      quantity: cartItems[id]
+    })).filter(item => item.quantity > 0);
+
+    if (items.length === 0) {
+        return errorToast("Your cart is empty", "cart-error");
+    }
+
+    const amount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
 
     try {
-        const data = await placeOrderRequest(selectedAddress);
+        const payload = {
+            address: selectedAddress,
+            items,
+            amount,
+            paymentMethod
+        };
+        const data = await placeOrderRequest(payload);
         if (data.success) {
-            successToast("Order placed successfully!", "order-success");
-            // Refresh user data (for cart clearing)
-            fetchUserData();
-            router.push('/order-placed');
+            if (paymentMethod === "COD") {
+              successToast("Order placed successfully!", "order-success");
+              fetchUserData();
+              router.push('/order-placed');
+            } else if (paymentMethod === "ONLINE") {
+              if (!isScriptLoaded) {
+                return errorToast("Razorpay SDK not loaded", "rzp-error");
+              }
+              const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
+                name: "SwyftCart",
+                description: "Order Payment",
+                order_id: data.razorpayOrderId,
+                handler: async function (response) {
+                  try {
+                    const verifyRes = await fetch('/api/order/verify', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        orderId: data.orderId
+                      })
+                    });
+                    const verifyData = await verifyRes.json();
+                    if (verifyData.success) {
+                      successToast("Payment successful!", "payment-success");
+                      fetchUserData();
+                      router.push('/order-placed');
+                    } else {
+                      errorToast(verifyData.message || "Payment verification failed", "payment-failed");
+                    }
+                  } catch (error) {
+                    errorToast("Payment verification failed", "payment-failed");
+                  }
+                },
+                prefill: {
+                  name: selectedAddress.fullName,
+                  contact: selectedAddress.phoneNumber,
+                },
+                theme: {
+                  color: "#ea580c" // Tailwind orange-600
+                }
+              };
+              const rzp = new window.Razorpay(options);
+              rzp.on('payment.failed', function (response){
+                 errorToast("Payment failed: " + response.error.description, "payment-failed");
+              });
+              rzp.open();
+            }
+        } else {
+          errorToast(data.message || "Failed to place order", "order-error");
         }
     } catch (error) {
         console.error("Place order error:", error);
+        errorToast(error.message || "Failed to place order", "order-error");
     }
   }
 
@@ -131,6 +212,37 @@ const OrderSummary = () => {
             <p>{formatPrice(getCartAmount() + Math.floor(getCartAmount() * 0.02))}</p>
           </div>
         </div>
+        
+        <div className="space-y-4 pt-4 border-t border-gray-500/30">
+          <label className="text-base font-medium uppercase text-gray-600 block mb-2">
+            Payment Method
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="COD" 
+                checked={paymentMethod === "COD"} 
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-4 h-4 text-orange-600"
+              />
+              <span className="text-gray-700">Cash on Delivery</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="ONLINE" 
+                checked={paymentMethod === "ONLINE"} 
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-4 h-4 text-orange-600"
+              />
+              <span className="text-gray-700">Pay Online (Razorpay)</span>
+            </label>
+          </div>
+        </div>
+
       </div>
 
       <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">

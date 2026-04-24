@@ -55,18 +55,18 @@ export const addToCart = async (userId, productId, quantity = 1) => {
     .lean();
   assertProductAvailable(product);
 
-  const user = await User.findById(userId).select("cartItems");
+  let user = await User.findById(userId).select("cartItems");
   if (!user) throw new AppError("User not found", 404);
 
   const current = toPositiveInt(user.cartItems?.[productId], 0);
   const nextQty = Math.min(current + toPositiveInt(quantity, 1), MAX_CART_ITEM_QTY);
 
-  user.cartItems = {
-    ...(user.cartItems || {}),
-    [productId]: nextQty,
-  };
+  user = await User.findByIdAndUpdate(
+    userId,
+    { $set: { [`cartItems.${productId}`]: nextQty } },
+    { new: true, select: "cartItems" }
+  );
 
-  await user.save();
   return sanitizeCartMap(user.cartItems);
 };
 
@@ -75,23 +75,30 @@ export const updateCartItem = async (userId, productId, quantity) => {
   await connectDB();
 
   const qty = toPositiveInt(quantity, 0);
-  const user = await User.findById(userId).select("cartItems");
-  if (!user) throw new AppError("User not found", 404);
-
-  const nextCart = { ...(user.cartItems || {}) };
+  let user;
 
   if (qty <= 0) {
-    delete nextCart[productId];
+    user = await User.findByIdAndUpdate(
+      userId,
+      { $unset: { [`cartItems.${productId}`]: "" } },
+      { new: true, select: "cartItems" }
+    );
+    if (!user) throw new AppError("User not found", 404);
   } else {
     const product = await Product.findById(productId)
       .select("_id inStock stock")
       .lean();
     assertProductAvailable(product);
-    nextCart[productId] = Math.min(qty, MAX_CART_ITEM_QTY);
+
+    const nextQty = Math.min(qty, MAX_CART_ITEM_QTY);
+    user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { [`cartItems.${productId}`]: nextQty } },
+      { new: true, select: "cartItems" }
+    );
+    if (!user) throw new AppError("User not found", 404);
   }
 
-  user.cartItems = nextCart;
-  await user.save();
   return sanitizeCartMap(user.cartItems);
 };
 
@@ -99,14 +106,13 @@ export const removeCartItem = async (userId, productId) => {
   validateProductId(productId);
   await connectDB();
 
-  const user = await User.findById(userId).select("cartItems");
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $unset: { [`cartItems.${productId}`]: "" } },
+    { new: true, select: "cartItems" }
+  );
+
   if (!user) throw new AppError("User not found", 404);
-
-  const nextCart = { ...(user.cartItems || {}) };
-  delete nextCart[productId];
-
-  user.cartItems = nextCart;
-  await user.save();
   return sanitizeCartMap(user.cartItems);
 };
 
@@ -147,20 +153,28 @@ export const mergeGuestCart = async (userId, guestCart = {}) => {
       .map((product) => String(product._id))
   );
 
+  const updateOps = {};
+
   productIds.forEach((productId) => {
     if (!validSet.has(productId)) return;
-    const currentQty = toPositiveInt(nextCart[productId], 0);
+    const currentQty = toPositiveInt(user.cartItems?.[productId], 0);
     const mergedQty = Math.min(
       currentQty + toPositiveInt(incoming[productId], 0),
       MAX_CART_ITEM_QTY
     );
     if (mergedQty > 0) {
-      nextCart[productId] = mergedQty;
+      updateOps[`cartItems.${productId}`] = mergedQty;
     }
   });
 
-  user.cartItems = nextCart;
-  await user.save();
+  if (Object.keys(updateOps).length > 0) {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateOps },
+      { new: true, select: "cartItems" }
+    );
+    return sanitizeCartMap(updatedUser.cartItems);
+  }
 
   return sanitizeCartMap(user.cartItems);
 };

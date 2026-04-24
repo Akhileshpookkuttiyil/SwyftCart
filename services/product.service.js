@@ -95,6 +95,7 @@ const applyLean = (query, lean = true) => (lean ? query.lean() : query);
 const normalizeProductDocument = (product) => ({
   ...product,
   image: Array.isArray(product.image) ? product.image : [],
+  isOutOfStock: (product.stock || 0) <= 0,
 });
 
 export const fetchProducts = async ({
@@ -183,6 +184,7 @@ export const createProduct = async (payload) => {
     category: payload.category,
     price: Number(payload.price),
     offerPrice: Number(payload.offerPrice),
+    stock: payload.stock !== undefined ? Number(payload.stock) : 0,
     rating: Number(payload.rating ?? 4.5),
     image: Array.isArray(payload.image) && payload.image.length > 0 ? payload.image : undefined,
   });

@@ -4,8 +4,9 @@ import {
   createSuccessResponse,
   withController,
 } from "@/lib/api-response";
-import { createOrder, fetchOrdersByUserId, fetchSellerOrders, updateOrderStatus } from "@/services/order.service";
+import { createOrder, fetchOrdersByUserId, fetchSellerOrders, updateOrderStatus, verifyPayment } from "@/services/order.service";
 import authSeller from "@/lib/authSeller";
+import crypto from "crypto";
 
 const requireAuthUserId = (request) => {
   const { userId } = getAuth(request);
@@ -18,14 +19,23 @@ const requireAuthUserId = (request) => {
 export const placeOrderController = withController(
   async (request) => {
     const userId = requireAuthUserId(request);
-    const { address } = await request.json();
+    const { address, items, amount, paymentMethod } = await request.json();
 
     if (!address) {
       throw new AppError("Address is required", 400);
     }
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new AppError("Items array is required and cannot be empty", 400);
+    }
+    if (!amount || amount <= 0) {
+      throw new AppError("Valid amount is required", 400);
+    }
+    if (!paymentMethod || !["COD", "ONLINE"].includes(paymentMethod)) {
+      throw new AppError("Valid payment method is required", 400);
+    }
 
-    const order = await createOrder(userId, address);
-    return createSuccessResponse({ success: true, message: "Order placed successfully", order });
+    const result = await createOrder(userId, { addressData: address, items, amount, paymentMethod });
+    return createSuccessResponse(result);
   },
   {
     fallbackMessage: "Failed to place order",
@@ -76,4 +86,38 @@ export const updateStatusController = withController(
       fallbackMessage: "Failed to update order status",
       context: "POST /api/order/status",
     }
+);
+
+export const updatePaymentStatusController = withController(
+  async (request) => {
+    // Note: We might not require auth user ID strictly here since webhook or redirect can be used,
+    // but typically verification from frontend includes user session.
+    // If we want it secure, we can verify auth.
+    // But since Razorpay signature is proof of authenticity, it's safe.
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = await request.json();
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+      throw new AppError("Invalid payment details", 400);
+    }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "dummy")
+      .update(body.toString())
+      .digest("hex");
+
+    const isAuthentic = expectedSignature === razorpay_signature;
+
+    if (!isAuthentic) {
+      throw new AppError("Payment verification failed", 400);
+    }
+
+    // Do NOT update order status here. The webhook is the single source of truth.
+    // We just return success to the frontend so it can redirect the user.
+    return createSuccessResponse({ success: true, message: "Payment verified locally. Awaiting webhook confirmation." });
+  },
+  {
+    fallbackMessage: "Payment verification failed",
+    context: "POST /api/order/verify",
+  }
 );
