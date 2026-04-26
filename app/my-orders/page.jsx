@@ -50,50 +50,52 @@ const MyOrders = () => {
                                 </div>
                             ) : (
                                 orders.map((order) => (
-                                    <div key={order._id} className="flex flex-col md:flex-row gap-5 justify-between p-5 border-b border-gray-300">
-                                        <div className="flex-1 flex gap-5 max-w-80">
-                                            <Image
-                                                className="max-w-16 max-h-16 object-cover grayscale opacity-20"
-                                                src={assets.box_icon}
-                                                alt="box_icon"
-                                            />
-                                            <div className="flex flex-col gap-2">
-                                                <div className="font-medium text-base">
-                                                    {order.items.map((item, i) => (
-                                                        <p key={i}>{item.product?.name || 'Product'} x {item.quantity}</p>
-                                                    ))}
+                                        <div key={order._id} className="flex flex-col md:flex-row gap-5 justify-between p-5 border-b border-gray-300">
+                                            <div className="flex-1 flex gap-5 max-w-80">
+                                                <Image
+                                                    className="max-w-16 max-h-16 object-cover rounded-md"
+                                                    src={order.items[0]?.image || assets.box_icon}
+                                                    alt={order.items[0]?.name || "Order Item"}
+                                                    width={64}
+                                                    height={64}
+                                                />
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="font-medium text-base">
+                                                        {order.items.map((item, i) => (
+                                                            <p key={i}>{item.name} x {item.quantity}</p>
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-xs text-gray-500">
+                                                        Order ID: #{order._id.slice(-8).toUpperCase()}
+                                                    </span>
                                                 </div>
-                                                <span className="text-xs text-gray-500">
-                                                    Order ID: #{order._id.slice(-8).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Delivery Address</p>
+                                                <p className="text-sm">
+                                                    <span className="font-medium">{order.address.fullName}</span>
+                                                    <br />
+                                                    <span className="text-gray-500">{order.address.area}</span>
+                                                    <br />
+                                                    <span className="text-gray-500">{`${order.address.city}, ${order.address.state}`}</span>
+                                                    <br />
+                                                    <span className="text-gray-500">{order.address.phoneNumber}</span>
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-col justify-center">
+                                                <p className="font-bold text-gray-900">{formatPrice(order.amount)}</p>
+                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded w-max mt-1 ${order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                    {order.status}
                                                 </span>
                                             </div>
+                                            <div className="md:text-right flex flex-col justify-center">
+                                                <p className="flex flex-col text-xs text-gray-500">
+                                                    <span>Method: {order.paymentMethod}</span>
+                                                    <span>Date: {new Date(order.date).toLocaleDateString()}</span>
+                                                    <span>Payment: {order.paymentStatus === 'paid' ? 'Completed' : order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}</span>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Delivery Address</p>
-                                            <p className="text-sm">
-                                                <span className="font-medium">{order.address.fullName}</span>
-                                                <br />
-                                                <span className="text-gray-500">{order.address.area}</span>
-                                                <br />
-                                                <span className="text-gray-500">{`${order.address.city}, ${order.address.state}`}</span>
-                                                <br />
-                                                <span className="text-gray-500">{order.address.phoneNumber}</span>
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col justify-center">
-                                            <p className="font-bold text-gray-900">{formatPrice(order.amount)}</p>
-                                            <span className="text-[10px] uppercase font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded w-max mt-1">
-                                                {order.status}
-                                            </span>
-                                        </div>
-                                        <div className="md:text-right flex flex-col justify-center">
-                                            <p className="flex flex-col text-xs text-gray-500">
-                                                <span>Method: COD</span>
-                                                <span>Date: {new Date(order.date).toLocaleDateString()}</span>
-                                                <span>Payment: Pending</span>
-                                            </p>
-                                        </div>
-                                    </div>
                                 ))
                             )}
                         </div>

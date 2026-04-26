@@ -6,6 +6,9 @@ const orderSchema = new mongoose.Schema(
     items: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        image: { type: String, required: true },
         quantity: { type: Number, required: true },
       },
     ],
@@ -27,11 +30,15 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: { type: String, required: true },
     paymentStatus: { type: String, default: "pending" },
     payment: { type: Boolean, required: true, default: false },
-    razorpayOrderId: { type: String, unique: true, sparse: true },
+    razorpayOrderId: { type: String },
     date: { type: Number, required: true },
   },
   { timestamps: true }
 );
+
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ razorpayOrderId: 1 }, { unique: true, sparse: true });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 

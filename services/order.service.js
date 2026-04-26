@@ -45,11 +45,16 @@ export const createOrder = async (userId, payload) => {
       });
     }
 
+    const price = product.offerPrice ?? product.price;
+
     orderItems.push({
       product: product._id,
+      name: product.name,
+      price: price,
+      image: product.image[0],
       quantity: quantity,
     });
-    serverCalculatedAmount += (product.offerPrice ?? product.price) * quantity;
+    serverCalculatedAmount += price * quantity;
   });
 
   if (outOfStockItems.length > 0) {
