@@ -27,7 +27,7 @@ const Navbar = () => {
       <Link href="/" aria-label="Go to Home">
         <Image
           src={assets.logo}
-          alt="QuickCart Logo"
+          alt="SwyftCart Logo"
           width={128}
           height={40}
           priority

@@ -11,6 +11,7 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [isPlacing, setIsPlacing] = useState(false);
 
   const [userAddresses, setUserAddresses] = useState([]);
 
@@ -50,6 +51,7 @@ const OrderSummary = () => {
     const amount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
 
     try {
+        setIsPlacing(true);
         const payload = {
             address: selectedAddress,
             items,
@@ -117,6 +119,8 @@ const OrderSummary = () => {
     } catch (error) {
         console.error("Place order error:", error);
         errorToast(error.message || "Failed to place order", "order-error");
+    } finally {
+        setIsPlacing(false);
     }
   }
 
@@ -245,8 +249,17 @@ const OrderSummary = () => {
 
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
-        Place Order
+      <button 
+        disabled={isPlacing} 
+        onClick={createOrder} 
+        className={`w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 transition-all flex items-center justify-center gap-2 ${isPlacing ? "opacity-70 cursor-not-allowed" : ""}`}
+      >
+        {isPlacing ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            Processing...
+          </>
+        ) : "Place Order"}
       </button>
     </div>
   );

@@ -24,8 +24,9 @@ const ProductCard = ({ product }) => {
                     src={product.image?.[0] || assets.upload_area}
                     alt={product.name}
                     className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 md:w-full md:h-full"
-                    width={800}
-                    height={800}
+                    width={400}
+                    height={400}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
                 />
                 <button
                     onClick={(event) => {

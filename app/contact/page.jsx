@@ -21,7 +21,7 @@ const ContactPage = () => {
             Reach out for support, seller onboarding, or product questions.
           </p>
           <div className="space-y-2 text-gray-700">
-            <p>Email: contact@greatstack.dev</p>
+            <p>Email: contact@swyftcart</p>
             <p>Phone: +1-234-567-890</p>
             <p>Hours: Monday to Friday, 9:00 AM to 6:00 PM</p>
           </div>

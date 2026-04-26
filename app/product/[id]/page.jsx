@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import Loading from "@/components/Loading";
+import { ProductPageSkeleton } from "@/components/Skeletons";
 import { useAppContext } from "@/context/AppContext";
 import useCart from "@/hooks/useCart";
 import React from "react";
@@ -21,6 +22,8 @@ const Product = () => {
   const [productData, setProductData] = useState(null);
   const [isFetchingLocal, setIsFetchingLocal] = useState(false);
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isBuying, setIsBuying] = useState(false);
 
   useEffect(() => {
     const product = products.find((item) => item._id === id);
@@ -52,7 +55,13 @@ const Product = () => {
   const rating = Number(productData?.rating ?? 4.5);
 
   if (productsLoading || (isFetchingLocal && !productData) || (id && !productData && !hasAttemptedFetch)) {
-    return <Loading />;
+    return (
+      <>
+        <Navbar />
+        <ProductPageSkeleton />
+        <Footer />
+      </>
+    );
   }
 
   if (!productData && hasAttemptedFetch) {
@@ -87,8 +96,10 @@ const Product = () => {
                 src={mainImage || productData.image[0] || assets.upload_area}
                 alt={productData.name}
                 className="w-full h-auto object-cover mix-blend-multiply"
-                width={1280}
-                height={720}
+                width={800}
+                height={800}
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
               />
             </div>
 
@@ -161,19 +172,28 @@ const Product = () => {
 
             <div className="flex items-center mt-10 gap-4">
               <button
-                onClick={() => addToCart(productData._id)}
-                className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
+                disabled={isAdding}
+                onClick={async () => {
+                  setIsAdding(true);
+                  await addToCart(productData._id);
+                  setIsAdding(false);
+                }}
+                className={`w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition flex items-center justify-center gap-2 ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                Add to Cart
+                {isAdding ? <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span> : null}
+                {isAdding ? "Adding..." : "Add to Cart"}
               </button>
               <button
-                onClick={() => {
-                  addToCart(productData._id);
+                disabled={isBuying}
+                onClick={async () => {
+                  setIsBuying(true);
+                  await addToCart(productData._id);
                   router.push("/cart");
                 }}
-                className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition"
+                className={`w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition flex items-center justify-center gap-2 ${isBuying ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                Buy now
+                {isBuying ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : null}
+                {isBuying ? "Processing..." : "Buy now"}
               </button>
             </div>
           </div>
