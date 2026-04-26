@@ -1,7 +1,6 @@
 import {
   addFavoriteController,
   getFavoritesController,
-  mergeFavoritesController,
   removeFavoriteController,
   toggleFavoriteController,
 } from "@/controllers/favorites.controller";
@@ -22,6 +21,4 @@ export async function DELETE(request) {
   return removeFavoriteController(request);
 }
 
-export async function PATCH(request) {
-  return mergeFavoritesController(request);
-}
+

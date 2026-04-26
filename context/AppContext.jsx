@@ -22,7 +22,6 @@ import {
 } from "@/lib/api/cart";
 import {
   clearFavoritesRequest,
-  mergeGuestFavoritesRequest,
   toggleFavoriteRequest,
 } from "@/lib/api/favorites";
 import { fetchCurrentUserRequest } from "@/lib/api/user";
@@ -33,7 +32,6 @@ export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
 
 const GUEST_CART_KEY = "swyftcart_guest_cart";
-const GUEST_FAVORITES_KEY = "swyftcart_guest_favorites";
 
 const sanitizeCartItems = (value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -73,16 +71,11 @@ export const AppContextProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const mergedGuestStateRef = useRef(false);
   const cartRef = useRef({});
-  const favoritesRef = useRef([]);
   const cartUpdateTimersRef = useRef(new Map());
 
   useEffect(() => {
     cartRef.current = cartItems;
   }, [cartItems]);
-
-  useEffect(() => {
-    favoritesRef.current = favorites;
-  }, [favorites]);
 
   // One-time cleanup of guest carts/favorites to remove dummy products
   useEffect(() => {
@@ -90,10 +83,8 @@ export const AppContextProvider = ({ children }) => {
     const MIGRATION_KEY = "swyftcart_migration_v2";
     if (!localStorage.getItem(MIGRATION_KEY)) {
       localStorage.removeItem(GUEST_CART_KEY);
-      localStorage.removeItem(GUEST_FAVORITES_KEY);
       localStorage.setItem(MIGRATION_KEY, "true");
       setCartItems({});
-      setFavorites([]);
     }
   }, []);
 
@@ -109,31 +100,16 @@ export const AppContextProvider = ({ children }) => {
     }
   }, []);
 
-  const getGuestFavoritesFromStorage = useCallback(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem(GUEST_FAVORITES_KEY);
-      if (!stored || stored === "undefined") return [];
-      const parsed = JSON.parse(stored);
-      return sanitizeFavorites(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      return [];
-    }
-  }, []);
 
-  const persistGuestState = useCallback((nextCart, nextFavorites) => {
+
+  const persistGuestState = useCallback((nextCart) => {
     if (typeof window === "undefined") return;
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(sanitizeCartItems(nextCart)));
-    localStorage.setItem(
-      GUEST_FAVORITES_KEY,
-      JSON.stringify(sanitizeFavorites(nextFavorites))
-    );
   }, []);
 
   const clearGuestState = useCallback(() => {
     if (typeof window === "undefined") return;
     localStorage.removeItem(GUEST_CART_KEY);
-    localStorage.removeItem(GUEST_FAVORITES_KEY);
   }, []);
 
 
@@ -172,7 +148,7 @@ export const AppContextProvider = ({ children }) => {
         if (quantity <= 0) delete next[itemId];
         else next[itemId] = Math.floor(quantity);
         setCartItems(next);
-        persistGuestState(next, favoritesRef.current);
+        persistGuestState(next);
         return;
       }
 
@@ -214,7 +190,7 @@ export const AppContextProvider = ({ children }) => {
         const prev = cartRef.current;
         const next = { ...prev, [itemId]: (prev[itemId] || 0) + 1 };
         setCartItems(next);
-        persistGuestState(next, favoritesRef.current);
+        persistGuestState(next);
         successToast("Added to cart", "cart-success");
         return;
       }
@@ -244,7 +220,7 @@ export const AppContextProvider = ({ children }) => {
   const clearCart = useCallback(async () => {
     if (!isSignedIn) {
       setCartItems({});
-      persistGuestState({}, favoritesRef.current);
+      persistGuestState({});
       return;
     }
 
@@ -270,19 +246,12 @@ export const AppContextProvider = ({ children }) => {
   const toggleFavorite = useCallback(
     async (itemId) => {
       if (!isSignedIn) {
-        const prev = favoritesRef.current;
-        const exists = prev.includes(itemId);
-        const next = exists ? prev.filter((id) => id !== itemId) : [...prev, itemId];
-        setFavorites(next);
-        persistGuestState(cartRef.current, next);
-        successToast(
-          next.includes(itemId) ? "Added to favorites" : "Removed from favorites",
-          "favorites-success"
-        );
+        errorToast("Please login to add favorites", "favorites-auth-error");
+        router.push("/sign-in");
         return;
       }
 
-      const previous = favoritesRef.current;
+      const previous = favorites;
       const optimistic = previous.includes(itemId)
         ? previous.filter((id) => id !== itemId)
         : [...previous, itemId];
@@ -307,17 +276,17 @@ export const AppContextProvider = ({ children }) => {
         errorToast(error?.message || "Failed to update favorites", "favorites-error");
       }
     },
-    [isLoaded, isSignedIn, persistGuestState, router]
+    [isLoaded, isSignedIn, favorites, router]
   );
 
   const clearFavorites = useCallback(async () => {
     if (!isSignedIn) {
-      setFavorites([]);
-      persistGuestState(cartRef.current, []);
+      errorToast("Please login to manage favorites", "favorites-auth-error");
+      router.push("/sign-in");
       return;
     }
 
-    const previous = favoritesRef.current;
+    const previous = favorites;
     setFavorites([]);
 
     try {
@@ -337,7 +306,7 @@ export const AppContextProvider = ({ children }) => {
         "favorites-error"
       );
     }
-  }, [isLoaded, isSignedIn, persistGuestState, router]);
+  }, [isLoaded, isSignedIn, favorites, router]);
 
   const isFavorite = useCallback((itemId) => favorites.includes(itemId), [favorites]);
 
@@ -381,12 +350,11 @@ export const AppContextProvider = ({ children }) => {
       setUserData(null);
       setIsSeller(false);
       setCartItems(getGuestCartFromStorage());
-      setFavorites(getGuestFavoritesFromStorage());
+      setFavorites([]);
     }
   }, [
     fetchUserData,
     getGuestCartFromStorage,
-    getGuestFavoritesFromStorage,
     isLoaded,
     isSignedIn,
   ]);
@@ -396,9 +364,8 @@ export const AppContextProvider = ({ children }) => {
 
     const mergeGuestState = async () => {
       const guestCart = getGuestCartFromStorage();
-      const guestFavorites = getGuestFavoritesFromStorage();
 
-      if (!Object.keys(guestCart).length && !guestFavorites.length) {
+      if (!Object.keys(guestCart).length) {
         mergedGuestStateRef.current = true;
         return;
       }
@@ -411,12 +378,7 @@ export const AppContextProvider = ({ children }) => {
           }
         }
 
-        if (guestFavorites.length) {
-          const data = await mergeGuestFavoritesRequest(guestFavorites);
-          if (data?.success) {
-            setFavorites(sanitizeFavorites(data.favorites || []));
-          }
-        }
+
 
         clearGuestState();
       } catch (error) {
@@ -430,7 +392,6 @@ export const AppContextProvider = ({ children }) => {
   }, [
     clearGuestState,
     getGuestCartFromStorage,
-    getGuestFavoritesFromStorage,
     isLoaded,
     isSignedIn,
   ]);

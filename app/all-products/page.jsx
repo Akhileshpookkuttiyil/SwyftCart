@@ -34,7 +34,20 @@ const AllProductsContent = () => {
   const tab = searchParams.get("tab");
   const isFavoritesTab = tab === "favourites";
 
-  const { favorites, clearFavorites, products: allAvailableProducts } = useAppContext();
+  const {
+    favorites,
+    clearFavorites,
+    products: allAvailableProducts,
+    isSignedIn,
+    isLoaded,
+  } = useAppContext();
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn && isFavoritesTab) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, isSignedIn, isFavoritesTab, router]);
+
   const [page, setPage] = useState(1);
   const { data: productsData, isLoading: productsLoading } = useProducts({ page, limit: 10 });
   const products = productsData?.products || [];

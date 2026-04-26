@@ -8,7 +8,6 @@ import {
   addToFavorites,
   clearFavorites,
   fetchFavorites,
-  mergeGuestFavorites,
   removeFromFavorites,
   toggleFavorite,
 } from "@/services/favorites.service";
@@ -91,17 +90,3 @@ export const toggleFavoriteController = withController(
     context: "PUT /api/favorites",
   }
 );
-
-export const mergeFavoritesController = withController(
-  async (request) => {
-    const userId = requireAuthUserId(request);
-    const { favorites: incomingItems } = await readBody(request);
-    const merged = await mergeGuestFavorites(userId, incomingItems || []);
-    return createSuccessResponse({ success: true, favorites: merged });
-  },
-  {
-    fallbackMessage: "Failed to merge favorites",
-    context: "PATCH /api/favorites",
-  }
-);
-

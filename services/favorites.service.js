@@ -114,21 +114,4 @@ export const clearFavorites = async (userId) => {
   return [];
 };
 
-export const mergeGuestFavorites = async (userId, guestItems = []) => {
-  await connectDB();
-  
-  const incoming = sanitizeFavorites(guestItems);
-  if (!incoming.length) return fetchFavorites(userId);
 
-  const validProducts = await Product.find({ _id: { $in: incoming } }).select("_id").lean();
-  const validIds = validProducts.map((product) => String(product._id));
-
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { $addToSet: { favorites: { $each: validIds } } },
-    { new: true }
-  ).select("favorites").lean();
-
-  if (!user) throw new AppError("User not found", 404);
-  return sanitizeFavorites(user.favorites);
-};
