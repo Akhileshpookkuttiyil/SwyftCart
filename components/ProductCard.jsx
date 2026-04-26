@@ -11,7 +11,7 @@ const ProductCard = ({ product }) => {
     const { formatPrice } = useAppContext()
     const { toggleFavorite, isFavorite } = useFavorites()
     const rating = Number(product?.rating ?? 4.5)
-    const wished = isFavorite(product._id)
+    const isFavorited = isFavorite(product._id)
 
     return (
         <Link
@@ -34,12 +34,12 @@ const ProductCard = ({ product }) => {
                         event.preventDefault();
                         toggleFavorite(product._id);
                     }}
-                    className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${wished ? "bg-orange-100" : "bg-white"}`}
-                    aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                    className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${isFavorited ? "bg-orange-100" : "bg-white"}`}
+                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
                 >
                     <Image
-                        className={`h-3 w-3 ${wished ? "opacity-100" : "opacity-60"}`}
-                        src={assets.heart_icon}
+                        className="h-3 w-3"
+                        src={isFavorited ? assets.heart : assets.heart_icon}
                         alt="heart_icon"
                     />
                 </button>

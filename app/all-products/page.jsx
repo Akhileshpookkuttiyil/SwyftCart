@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,7 +17,7 @@ const highlightMatch = (text, query) => {
   if (!query?.trim()) return text;
 
   const normalized = query.trim();
-  const regex = new RegExp(`(${normalized.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")})`, "ig");
+  const regex = new RegExp(`(${normalized.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")})`, "ig");
   return text.split(regex).map((part, index) =>
     part.toLowerCase() === normalized.toLowerCase() ? (
       <mark key={`${part}-${index}`} className="bg-orange-100 text-orange-700 rounded px-0.5">
@@ -28,9 +29,14 @@ const highlightMatch = (text, query) => {
   );
 };
 
-const AllProducts = () => {
+const AllProductsContent = () => {
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+  const isFavoritesTab = tab === "favourites";
+
+  const { favorites, clearFavorites, products: allAvailableProducts } = useAppContext();
   const [page, setPage] = useState(1);
-  const { data: productsData, isLoading: productsLoading, isError } = useProducts({ page, limit: 10 });
+  const { data: productsData, isLoading: productsLoading } = useProducts({ page, limit: 10 });
   const products = productsData?.products || [];
   const pagination = productsData?.pagination;
 
@@ -46,7 +52,12 @@ const AllProducts = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const parsed = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || "[]");
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (!stored || stored === "undefined") {
+        setRecentSearches([]);
+        return;
+      }
+      const parsed = JSON.parse(stored);
       setRecentSearches(Array.isArray(parsed) ? parsed.slice(0, 5) : []);
     } catch {
       setRecentSearches([]);
@@ -103,9 +114,11 @@ const AllProducts = () => {
   };
 
   const visibleProducts = useMemo(() => {
-    if (!debouncedSearch) return products;
-    return searchResults;
-  }, [debouncedSearch, products, searchResults]);
+    if (isFavoritesTab) {
+      return allAvailableProducts.filter((p) => favorites.includes(p._id));
+    }
+    return debouncedSearch ? searchResults : products;
+  }, [debouncedSearch, products, searchResults, isFavoritesTab, favorites, allAvailableProducts]);
 
   const onSelectSuggestion = (text) => {
     setSearchInput(text);
@@ -130,13 +143,15 @@ const AllProducts = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32">
-        <div className="flex flex-col items-end pt-12">
-          <p className="text-2xl font-medium">All products</p>
-          <div className="w-16 h-0.5 bg-orange-600 rounded-full"></div>
-        </div>
+    <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
+      <div className="flex flex-col items-end pt-12">
+        <p className="text-2xl font-medium">
+          {isFavoritesTab ? "Your Favourites" : "All products"}
+        </p>
+        <div className="w-16 h-0.5 bg-orange-600 rounded-full"></div>
+      </div>
+
+      {!isFavoritesTab && (
         <div className="w-full mt-6 relative">
           <input
             type="text"
@@ -176,45 +191,72 @@ const AllProducts = () => {
             </div>
           )}
         </div>
-        {productsLoading ? (
-          <Loading />
-        ) : searchLoading ? (
-          <div className="w-full py-12 text-gray-500">Searching products...</div>
-        ) : visibleProducts.length ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-12 pb-8 w-full">
-              {visibleProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-            {!debouncedSearch && pagination && pagination.totalPages > 1 && (
-              <div className="flex justify-center w-full gap-4 pb-14">
-                <button
-                  disabled={page === 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="px-4 py-2 border rounded disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="py-2">Page {page} of {pagination.totalPages}</span>
-                <button
-                  disabled={page === pagination.totalPages}
-                  onClick={() => setPage(p => p + 1)}
-                  className="px-4 py-2 border rounded disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full py-16 text-center text-gray-500">
-            {debouncedSearch
-              ? `No products found for "${debouncedSearch}".`
-              : "No products available right now."}
+      )}
+
+      {isFavoritesTab && favorites.length > 0 && (
+        <div className="w-full mt-6 flex justify-end">
+          <button
+            onClick={clearFavorites}
+            className="text-sm text-red-600 hover:text-red-700 font-medium border border-red-200 px-4 py-2 rounded-md hover:bg-red-50 transition"
+          >
+            Clear All Favourites
+          </button>
+        </div>
+      )}
+
+      {productsLoading ? (
+        <Loading />
+      ) : searchLoading ? (
+        <div className="w-full py-12 text-gray-500">Searching products...</div>
+      ) : visibleProducts.length ? (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-12 pb-8 w-full">
+            {visibleProducts.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
           </div>
-        )}
-      </div>
+          {!isFavoritesTab && !debouncedSearch && pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center w-full gap-4 pb-14">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-4 py-2 border rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="py-2">
+                Page {page} of {pagination.totalPages}
+              </span>
+              <button
+                disabled={page === pagination.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="w-full py-16 text-center text-gray-500">
+          {isFavoritesTab
+            ? "You haven't added any products to your favourites yet."
+            : debouncedSearch
+            ? `No products found for "${debouncedSearch}".`
+            : "No products available right now."}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AllProducts = () => {
+  return (
+    <>
+      <Navbar />
+      <Suspense fallback={<Loading />}>
+        <AllProductsContent />
+      </Suspense>
       <Footer />
     </>
   );

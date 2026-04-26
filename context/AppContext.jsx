@@ -21,6 +21,7 @@ import {
   updateCartItemRequest,
 } from "@/lib/api/cart";
 import {
+  clearFavoritesRequest,
   mergeGuestFavoritesRequest,
   toggleFavoriteRequest,
 } from "@/lib/api/favorites";
@@ -99,7 +100,9 @@ export const AppContextProvider = ({ children }) => {
   const getGuestCartFromStorage = useCallback(() => {
     if (typeof window === "undefined") return {};
     try {
-      const parsed = JSON.parse(localStorage.getItem(GUEST_CART_KEY) || "{}");
+      const stored = localStorage.getItem(GUEST_CART_KEY);
+      if (!stored || stored === "undefined") return {};
+      const parsed = JSON.parse(stored);
       return sanitizeCartItems(parsed);
     } catch {
       return {};
@@ -109,8 +112,10 @@ export const AppContextProvider = ({ children }) => {
   const getGuestFavoritesFromStorage = useCallback(() => {
     if (typeof window === "undefined") return [];
     try {
-      const parsed = JSON.parse(localStorage.getItem(GUEST_FAVORITES_KEY) || "[]");
-      return sanitizeFavorites(parsed);
+      const stored = localStorage.getItem(GUEST_FAVORITES_KEY);
+      if (!stored || stored === "undefined") return [];
+      const parsed = JSON.parse(stored);
+      return sanitizeFavorites(Array.isArray(parsed) ? parsed : []);
     } catch {
       return [];
     }
@@ -141,7 +146,7 @@ export const AppContextProvider = ({ children }) => {
         setUserData(data.user);
         setCartItems(sanitizeCartItems(data.user.cartItems || {}));
         setFavorites(
-          sanitizeFavorites(data.user.favorites || data.user.wishlistItems || [])
+          sanitizeFavorites(data.user.favorites || [])
         );
         setIsSeller(
           data.user.role === "seller" || user?.publicMetadata?.role === "seller"
@@ -262,7 +267,7 @@ export const AppContextProvider = ({ children }) => {
     }
   }, [isLoaded, isSignedIn, persistGuestState, router]);
 
-  const toggleWishlist = useCallback(
+  const toggleFavorite = useCallback(
     async (itemId) => {
       if (!isSignedIn) {
         const prev = favoritesRef.current;
@@ -286,7 +291,7 @@ export const AppContextProvider = ({ children }) => {
       try {
         const data = await toggleFavoriteRequest(itemId);
         if (data?.success) {
-          const next = sanitizeFavorites(data.wishlistItems || data.favorites || []);
+          const next = sanitizeFavorites(data.favorites || []);
           setFavorites(next);
           successToast(
             next.includes(itemId) ? "Added to favorites" : "Removed from favorites",
@@ -305,7 +310,36 @@ export const AppContextProvider = ({ children }) => {
     [isLoaded, isSignedIn, persistGuestState, router]
   );
 
-  const isWishlisted = useCallback((itemId) => favorites.includes(itemId), [favorites]);
+  const clearFavorites = useCallback(async () => {
+    if (!isSignedIn) {
+      setFavorites([]);
+      persistGuestState(cartRef.current, []);
+      return;
+    }
+
+    const previous = favoritesRef.current;
+    setFavorites([]);
+
+    try {
+      const data = await clearFavoritesRequest();
+      if (data?.success) {
+        setFavorites(sanitizeFavorites(data.favorites || []));
+        successToast("Favorites cleared", "favorites-success");
+      }
+    } catch (error) {
+      console.error("Clear favorites error:", error);
+      if (error?.status === 401 && isLoaded) {
+        router.push("/sign-in");
+      }
+      setFavorites(previous);
+      errorToast(
+        error?.message || "Failed to clear favorites",
+        "favorites-error"
+      );
+    }
+  }, [isLoaded, isSignedIn, persistGuestState, router]);
+
+  const isFavorite = useCallback((itemId) => favorites.includes(itemId), [favorites]);
 
   const getCartCount = useCallback(
     () =>
@@ -380,7 +414,7 @@ export const AppContextProvider = ({ children }) => {
         if (guestFavorites.length) {
           const data = await mergeGuestFavoritesRequest(guestFavorites);
           if (data?.success) {
-            setFavorites(sanitizeFavorites(data.wishlistItems || data.favorites || []));
+            setFavorites(sanitizeFavorites(data.favorites || []));
           }
         }
 
@@ -411,7 +445,7 @@ export const AppContextProvider = ({ children }) => {
     []
   );
 
-  const getWishlistCount = useCallback(() => favorites.length, [favorites]);
+  const getFavoritesCount = useCallback(() => favorites.length, [favorites]);
 
   const value = useMemo(
     () => ({
@@ -428,17 +462,15 @@ export const AppContextProvider = ({ children }) => {
       userData,
       cartItems,
       setCartItems,
-      wishlistItems: favorites,
       favorites,
       addToCart,
       updateCartQuantity,
       clearCart,
-      toggleWishlist,
-      toggleFavorite: toggleWishlist,
-      isWishlisted,
+      clearFavorites,
+      toggleFavorite,
+      isFavorite,
       getCartCount,
-      getWishlistCount,
-      getFavoritesCount: getWishlistCount,
+      getFavoritesCount,
       getCartAmount,
       products,
       productsLoading,
@@ -461,10 +493,11 @@ export const AppContextProvider = ({ children }) => {
       addToCart,
       updateCartQuantity,
       clearCart,
-      toggleWishlist,
-      isWishlisted,
+      clearFavorites,
+      toggleFavorite,
+      isFavorite,
       getCartCount,
-      getWishlistCount,
+      getFavoritesCount,
       getCartAmount,
       products,
       productsLoading,

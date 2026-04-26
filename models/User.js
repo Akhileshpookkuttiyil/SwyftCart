@@ -12,8 +12,7 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     cartItems: { type: Object, default: {} },
-    wishlistItems: { type: [String], default: [] },
-    favorites: { type: [String], default: [] },
+    favorites: { type: [String], default: [], index: true },
   },
   {
     minimize: false,

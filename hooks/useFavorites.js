@@ -2,17 +2,17 @@ import { useMemo } from "react";
 import { useAppContext } from "@/context/AppContext";
 
 export const useFavorites = () => {
-  const { wishlistItems, toggleWishlist, isWishlisted, getWishlistCount } =
+  const { favorites, toggleFavorite, isFavorite, getFavoritesCount } =
     useAppContext();
 
   return useMemo(
     () => ({
-      favorites: wishlistItems,
-      toggleFavorite: toggleWishlist,
-      isFavorite: isWishlisted,
-      getFavoritesCount: getWishlistCount,
+      favorites,
+      toggleFavorite,
+      isFavorite,
+      getFavoritesCount,
     }),
-    [getWishlistCount, isWishlisted, toggleWishlist, wishlistItems]
+    [getFavoritesCount, isFavorite, toggleFavorite, favorites]
   );
 };
 
