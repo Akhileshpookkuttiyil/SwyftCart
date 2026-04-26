@@ -13,7 +13,7 @@ SwyftCart is a production-ready **Next.js 15 eCommerce ecosystem** designed for 
 - **Persistent Cart**: Integrated cart system that persists across sessions via MongoDB, ensuring users never lose their selections.
 - **Detailed Product Pages**: High-fidelity product views featuring Cloudinary-optimized image galleries and technical specifications.
 - **Seamless Checkout**: Multi-step checkout flow including address management and order confirmation.
-- **Personalized Accounts**: Order history tracking and a dedicated "Favourites" wishlist system.
+- **Personalized Accounts**: Order history tracking and a dedicated "Favorites" system.
 
 ### 📊 Seller Dashboard
 
@@ -63,7 +63,7 @@ SwyftCart follows a modern, decoupled architecture designed for speed and reliab
 ```text
 SwyftCart/
 ├── app/                    # Next.js 15 App Router (Pages, Layouts, APIs)
-│   ├── api/                # RESTful endpoints (Cart, Order, Seller, Admin)
+│   ├── api/                # RESTful endpoints (Cart, Order, Seller, Favorites)
 │   ├── seller/             # Merchant-facing dashboard & management
 │   ├── my-orders/          # Buyer order history
 │   └── product/[id]/       # dynamic product detail views
