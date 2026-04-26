@@ -1,9 +1,29 @@
 'use client'
 import Navbar from '@/components/seller/Navbar'
 import Sidebar from '@/components/seller/Sidebar'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useAppContext } from '@/context/AppContext'
+import { useRouter } from 'next/navigation'
+import Loading from '@/components/Loading'
 
 const Layout = ({ children }) => {
+  const { isSeller, isLoaded, isSignedIn } = useAppContext()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isLoaded && (!isSignedIn || !isSeller)) {
+      router.push('/')
+    }
+  }, [isSeller, isLoaded, isSignedIn, router])
+
+  if (!isLoaded || !isSeller) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    )
+  }
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <Navbar />
@@ -18,7 +38,5 @@ const Layout = ({ children }) => {
     </div>
   )
 }
-
-
 
 export default Layout

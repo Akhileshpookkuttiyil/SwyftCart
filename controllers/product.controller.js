@@ -76,6 +76,7 @@ export const listSellerProductsController = withController(
     const userId = await requireSellerAuth(request);
     const searchParams = request.nextUrl.searchParams;
     const result = await fetchSellerProducts({
+      userId,
       ...getProductQueryOptions(searchParams),
     });
 
