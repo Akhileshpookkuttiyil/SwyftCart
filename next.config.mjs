@@ -32,6 +32,7 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ['lucide-react'],
     },
+    turbopack: {},
     webpack: (config, { isServer, dev }) => {
         if (dev && !isServer) {
             config.watchOptions = {
