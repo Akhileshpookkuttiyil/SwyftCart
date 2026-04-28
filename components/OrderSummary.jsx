@@ -1,5 +1,6 @@
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
+import { Spinner } from "@heroui/react";
 import { placeOrderRequest } from "@/lib/api/order";
 import { fetchAddressesRequest } from "@/lib/api/address";
 import { errorToast, successToast } from "@/lib/toast";
@@ -299,7 +300,7 @@ const OrderSummary = () => {
       >
         {isPlacing ? (
           <>
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <Spinner size="sm" color="white" />
             Processing...
           </>
         ) : "Place Order"}

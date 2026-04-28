@@ -37,7 +37,7 @@ export default async function Home() {
       <div className="px-6 md:px-16 lg:px-32">
         <HeaderSlider />
         <Suspense fallback={<HomeProductsSkeleton />}>
-          <HomeProducts initialProducts={initialProducts} />
+          <HomeProducts products={initialProducts} />
         </Suspense>
         <DynamicFeaturedProduct />
         <Banner />

@@ -1,20 +1,28 @@
 import { useMemo } from "react";
-import { useAppContext } from "@/context/AppContext";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 export const useFavorites = () => {
-  const { favorites, toggleFavorite, isFavorite, getFavoritesCount } =
-    useAppContext();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+  const { 
+    favorites, 
+    toggleFavorite: toggleFavoriteZustand, 
+    isFavorite, 
+    getFavoritesCount 
+  } = useFavoritesStore();
 
   return useMemo(
     () => ({
       favorites,
-      toggleFavorite,
+      toggleFavorite: (id) => toggleFavoriteZustand(id, isSignedIn, openSignIn),
       isFavorite,
       getFavoritesCount,
     }),
-    [getFavoritesCount, isFavorite, toggleFavorite, favorites]
+    [favorites, toggleFavoriteZustand, isFavorite, getFavoritesCount, isSignedIn, openSignIn]
   );
 };
 
 export default useFavorites;
+
 

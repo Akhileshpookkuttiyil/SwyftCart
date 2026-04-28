@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
+import { Spinner } from "@heroui/react";
 
 const MyAddresses = () => {
   const { isSignedIn, isLoaded, router, openSignIn } = useAppContext();
@@ -88,7 +89,7 @@ const MyAddresses = () => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+            <Spinner color="warning" size="lg" label="Loading addresses..." />
           </div>
         ) : addresses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-gray-50 rounded-lg">

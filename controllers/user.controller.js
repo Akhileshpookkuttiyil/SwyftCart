@@ -9,34 +9,38 @@ import User from "@/models/User";
 
 export const getCurrentUserController = withController(
   async (request) => {
+    console.log("[getCurrentUserController] Started");
     const { userId } = getAuth(request);
 
     if (!userId) {
+      console.log("[getCurrentUserController] Unauthorized");
       throw new AppError("Unauthorized", 401);
     }
 
+    console.log("[getCurrentUserController] Fetching user from DB:", userId);
     let user = await fetchUserById(userId, {
       select: "_id name email imageUrl role cartItems favorites",
     });
 
-    // JIT Sync: If user is authenticated in Clerk but not found in DB
-    // This handles cases where webhooks/Inngest functions are delayed or not configured
     if (!user) {
+      console.log("[getCurrentUserController] User not in DB, starting JIT Sync");
       try {
+        console.log("[getCurrentUserController] Initializing Clerk client");
         const client = await clerkClient();
+        console.log("[getCurrentUserController] Fetching user from Clerk");
         const clerkUser = await client.users.getUser(userId);
         
         if (clerkUser) {
+          console.log("[getCurrentUserController] Clerk user found, updating DB");
           const { first_name, last_name, email_addresses, image_url, public_metadata } = clerkUser;
           
-          // Use findOneAndUpdate with upsert to handle concurrency and ensure record existence
           user = await User.findOneAndUpdate(
             { _id: userId },
             {
               $set: {
-                email: email_addresses?.[0]?.email_address || clerkUser.email_addresses?.[0]?.email_address || `user_${userId}@swyftcart.com`,
+                email: email_addresses?.[0]?.email_address || `user_${userId}@swyftcart.com`,
                 name: `${first_name || ""} ${last_name || ""}`.trim() || clerkUser.username || "New User",
-                imageUrl: image_url || clerkUser.image_url || "https://img.clerk.com/static/default-user.png",
+                imageUrl: image_url || "https://img.clerk.com/static/default-user.png",
                 role: public_metadata?.role === "seller" ? "seller" : "user",
               },
               $setOnInsert: {
@@ -47,17 +51,19 @@ export const getCurrentUserController = withController(
             { upsert: true, new: true }
           );
           
-          console.log(`JIT Sync: Ensured user ${userId} in MongoDB`);
+          console.log(`[getCurrentUserController] JIT Sync complete for ${userId}`);
         }
       } catch (error) {
-        console.error("JIT Sync Error:", error);
+        console.error("[getCurrentUserController] JIT Sync Error:", error);
       }
     }
 
     if (!user) {
+      console.log("[getCurrentUserController] User not found after sync attempt");
       throw new AppError("User not found", 404);
     }
 
+    console.log("[getCurrentUserController] Returning user data");
     return createSuccessResponse({
       success: true,
       user: {

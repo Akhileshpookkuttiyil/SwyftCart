@@ -1,12 +1,12 @@
-import { NavbarSkeleton, HomeProductsSkeleton } from "@/components/Skeletons";
+import { NavbarSkeleton } from "@/components/Skeletons";
+import Loading from "@/components/Loading";
 
 export default function AppLoading() {
   return (
     <div className="w-full min-h-screen">
       <NavbarSkeleton />
-      <div className="px-6 md:px-16 lg:px-32 mt-6 space-y-10">
-        <div className="w-full h-[400px] bg-gray-200 rounded-xl animate-pulse"></div>
-        <HomeProductsSkeleton />
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+         <Loading />
       </div>
     </div>
   );

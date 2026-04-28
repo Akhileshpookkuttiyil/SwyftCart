@@ -6,6 +6,8 @@ import { fetchProductListRequest } from "@/lib/api/products";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 import { assets } from "@/assets/assets";
 
+import { X } from "lucide-react";
+
 export default function NavbarSearch() {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
@@ -61,11 +63,17 @@ export default function NavbarSearch() {
     router.push(`/product/${productId}`);
   };
 
-  const handleSubmit = (e) => {
-    if (e.key === "Enter" && query.trim()) {
+  const searchRedirect = () => {
+    if (query.trim()) {
       setExpanded(false);
       router.push(`/all-products?search=${encodeURIComponent(query.trim())}`);
       setQuery("");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      searchRedirect();
     }
   };
 
@@ -78,7 +86,6 @@ export default function NavbarSearch() {
           onClick={() => {
             if (!expanded) {
                setExpanded(true);
-               // autoFocus could go here via ref
             }
           }}
           className={`cursor-pointer p-1.5 ${!expanded && "hover:bg-gray-100 rounded-full"}`}
@@ -93,15 +100,25 @@ export default function NavbarSearch() {
         </div>
         
         {expanded && (
-          <input
-            type="text"
-            className="bg-transparent w-full outline-none text-sm ml-2 text-gray-700"
-            placeholder="Search products..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleSubmit}
-            autoFocus
-          />
+          <div className="flex items-center w-full ml-2">
+            <input
+              type="text"
+              className="bg-transparent w-full outline-none text-sm text-gray-700"
+              placeholder="Search products..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+            />
+            {query && (
+              <button 
+                onClick={() => setQuery("")}
+                className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -133,7 +150,7 @@ export default function NavbarSearch() {
                  </button>
                ))}
                <button 
-                 onClick={() => handleSubmit({key: "Enter"})}
+                 onClick={searchRedirect}
                  className="px-3 py-2 text-xs text-center border-t text-blue-600 hover:bg-blue-50 focus:bg-blue-50"
                >
                  View all results for "{query}"

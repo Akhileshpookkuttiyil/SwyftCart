@@ -1,8 +1,11 @@
 @import "tailwindcss";
+@import "@heroui/styles";
 
 /* Ensure Tailwind scans all relevant folders */
 @source "../components/**/*.{js,jsx,ts,tsx}";
 @source "../app/**/*.{js,jsx,ts,tsx}";
+@source "../node_modules/@heroui/react/dist/**/*.{js,jsx,ts,tsx}";
+@source "../node_modules/@heroui/styles/dist/**/*.{js,jsx,ts,tsx}";
 
 @theme {
   /* Restore Tailwind 3 Gray Palette using RGB for perfect opacity support */

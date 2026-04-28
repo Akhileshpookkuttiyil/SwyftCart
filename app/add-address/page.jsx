@@ -8,6 +8,7 @@ import { createAddressRequest, fetchAddressByIdRequest, updateAddressRequest } f
 import { successToast, errorToast } from "@/lib/toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
+import { Spinner } from "@heroui/react";
 
 const AddAddressForm = () => {
     const router = useRouter();
@@ -85,7 +86,7 @@ const AddAddressForm = () => {
     if (loading) {
         return (
             <div className="flex justify-center py-20">
-                <div className="w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+                <Spinner color="warning" size="lg" label="Loading address..." />
             </div>
         );
     }
@@ -166,7 +167,7 @@ const AddAddressForm = () => {
                 >
                     {isSubmitting ? (
                         <>
-                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            <Spinner size="sm" color="white" />
                             {addressId ? "Updating..." : "Saving..."}
                         </>
                     ) : (addressId ? "Update address" : "Save address")}
@@ -185,7 +186,7 @@ const AddAddress = () => {
     return (
         <>
             <Navbar />
-            <Suspense fallback={<div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div></div>}>
+            <Suspense fallback={<div className="flex justify-center py-20"><Spinner color="warning" size="lg" /></div>}>
                 <AddAddressForm />
             </Suspense>
             <Footer />

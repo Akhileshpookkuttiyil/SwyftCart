@@ -1,35 +1,39 @@
 import { useMemo } from "react";
-import { useAppContext } from "@/context/AppContext";
+import { useCartStore } from "@/store/useCartStore";
+import { useAuth } from "@clerk/nextjs";
 
 export const useCart = () => {
+  const { isSignedIn } = useAuth();
   const {
     cartItems,
-    addToCart,
-    updateCartQuantity,
-    clearCart,
+    addToCart: addToCartZustand,
+    updateQuantity,
+    clearCart: clearCartZustand,
     getCartAmount,
     getCartCount,
-  } = useAppContext();
+  } = useCartStore();
 
   return useMemo(
     () => ({
       cartItems,
-      addToCart,
-      updateCartQuantity,
-      clearCart,
+      addToCart: (id) => addToCartZustand(id, isSignedIn),
+      updateCartQuantity: (id, qty) => updateQuantity(id, qty, isSignedIn),
+      clearCart: () => clearCartZustand(isSignedIn),
       getCartAmount,
       getCartCount,
     }),
     [
       cartItems,
-      addToCart,
-      updateCartQuantity,
-      clearCart,
+      addToCartZustand,
+      updateQuantity,
+      clearCartZustand,
       getCartAmount,
       getCartCount,
+      isSignedIn,
     ]
   );
 };
 
 export default useCart;
+
 
