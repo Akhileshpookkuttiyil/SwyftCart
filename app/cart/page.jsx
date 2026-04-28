@@ -152,7 +152,7 @@ const Cart = () => {
             </>
           )}
         </div>
-        {cartIds.length > 0 && <OrderSummary />}
+        {cartIds.length > 0 && <OrderSummary products={products} />}
       </div>
     </>
   );

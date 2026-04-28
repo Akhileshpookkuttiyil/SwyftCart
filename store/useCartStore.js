@@ -112,6 +112,7 @@ export const useCartStore = create(
       },
 
       getCartAmount: (products) => {
+        if (!Array.isArray(products)) return 0;
         return Object.entries(get().cartItems).reduce((sum, [id, qty]) => {
           const p = products.find(item => item._id === id);
           return sum + (p ? (p.offerPrice ?? p.price) * qty : 0);

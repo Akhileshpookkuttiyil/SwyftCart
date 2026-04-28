@@ -9,7 +9,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useUserStore } from "@/store/useUserStore";
 import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
-const OrderSummary = () => {
+const OrderSummary = ({ products }) => {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
@@ -84,7 +84,7 @@ const OrderSummary = () => {
         return errorToast("Your cart is empty", "cart-error");
     }
 
-    const amount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
+    const amount = getCartAmount(products) + Math.floor(getCartAmount(products) * 0.02);
 
     try {
         setIsPlacing(true);
@@ -253,7 +253,7 @@ const OrderSummary = () => {
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items {getCartCount()}</p>
-            <p className="text-gray-800">{formatPrice(getCartAmount())}</p>
+            <p className="text-gray-800">{formatPrice(getCartAmount(products))}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Shipping Fee</p>
@@ -262,12 +262,12 @@ const OrderSummary = () => {
           <div className="flex justify-between">
             <p className="text-gray-600">Tax (2%)</p>
             <p className="font-medium text-gray-800">
-              {formatPrice(Math.floor(getCartAmount() * 0.02))}
+              {formatPrice(Math.floor(getCartAmount(products) * 0.02))}
             </p>
           </div>
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
-            <p>{formatPrice(getCartAmount() + Math.floor(getCartAmount() * 0.02))}</p>
+            <p>{formatPrice(getCartAmount(products) + Math.floor(getCartAmount(products) * 0.02))}</p>
           </div>
         </div>
         
