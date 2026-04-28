@@ -49,13 +49,13 @@ const Navbar = () => {
             <Link
               key={link.href}
               href={link.href}
-              className={`relative py-2 text-sm font-medium transition-all duration-300 hover:text-blue-600 ${
-                isActive ? "text-blue-600" : "text-gray-600"
+              className={`relative py-2 text-sm font-medium transition-all duration-300 hover:text-orange-600 ${
+                isActive ? "text-orange-600" : "text-gray-600"
               }`}
             >
               {link.label}
               {isActive && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full animate-in fade-in slide-in-from-bottom-1 duration-500" />
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-600 rounded-full animate-in fade-in slide-in-from-bottom-1 duration-500" />
               )}
             </Link>
           );
@@ -86,7 +86,7 @@ const Navbar = () => {
         >
           <CartIcon className="w-6 h-6 text-gray-700" />
           {cartCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 bg-orange-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
               {cartCount}
             </span>
           )}
@@ -154,8 +154,8 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 className={`w-full py-2 px-4 rounded-lg text-base font-medium transition-colors ${
                   isActive 
-                    ? "bg-blue-50 text-blue-600" 
-                    : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                    ? "bg-orange-50 text-orange-600" 
+                    : "text-gray-700 hover:bg-gray-50 hover:text-orange-600"
                 }`}
               >
                 {link.label}
