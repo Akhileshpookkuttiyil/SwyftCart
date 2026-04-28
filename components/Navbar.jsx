@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -15,9 +15,17 @@ const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const isSeller = useUserStore((state) => state.isSeller);
-  const getCartCount = useCartStore((state) => state.getCartCount);
+  const cartItems = useCartStore((state) => state.cartItems);
   const [isOpen, setIsOpen] = useState(false);
-  const cartCount = getCartCount();
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const cartCount = isMounted 
+    ? Object.values(cartItems).reduce((acc, qty) => acc + qty, 0) 
+    : 0;
 
   const navLinks = [
     { href: "/", label: "Home" },
