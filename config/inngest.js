@@ -16,14 +16,13 @@ export const syncUserCreation = inngest.createFunction(
       public_metadata,
     } = event.data;
     const userData = {
-      _id: id,
-      email: email_addresses[0]?.email_address,
-      name: `${first_name || ""} ${last_name || ""}`.trim(),
-      imageUrl: image_url,
+      email: email_addresses?.[0]?.email_address || event.data.email_addresses?.[0]?.email_address || `user_${id}@swyftcart.com`,
+      name: `${first_name || ""} ${last_name || ""}`.trim() || event.data.username || "New User",
+      imageUrl: image_url || event.data.image_url || "https://img.clerk.com/static/default-user.png",
       role: public_metadata?.role === "seller" ? "seller" : "user",
     };
     await connectDB();
-    await User.create(userData);
+    await User.findByIdAndUpdate(id, { $set: userData, _id: id }, { upsert: true, new: true });
   }
 );
 
@@ -39,9 +38,9 @@ export const syncUserUpdation = inngest.createFunction(
       public_metadata,
     } = event.data;
     const userData = {
-      email: email_addresses[0]?.email_address,
-      name: `${first_name || ""} ${last_name || ""}`.trim(),
-      imageUrl: image_url,
+      email: email_addresses?.[0]?.email_address || event.data.email_addresses?.[0]?.email_address || `user_${id}@swyftcart.com`,
+      name: `${first_name || ""} ${last_name || ""}`.trim() || event.data.username || "New User",
+      imageUrl: image_url || event.data.image_url || "https://img.clerk.com/static/default-user.png",
       role: public_metadata?.role === "seller" ? "seller" : "user",
     };
     await connectDB();
