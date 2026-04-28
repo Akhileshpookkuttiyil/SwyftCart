@@ -77,17 +77,20 @@ export const AppContextProvider = ({ children }) => {
     }
   }, [fetchUserData, isLoaded, isSignedIn, clearUser, setFavorites]);
 
-  // Merge guest cart on login
+  // Merge guest cart on login - ONLY if we haven't already and there are items to merge
   useEffect(() => {
     if (!isLoaded || !isSignedIn || mergedGuestStateRef.current) return;
 
     const performMerge = async () => {
-      await mergeCart(cartItems);
+      // Only merge if there's actually something in the local cart before we fetch the remote one
+      if (Object.keys(cartItems).length > 0) {
+        await mergeCart(cartItems);
+      }
       mergedGuestStateRef.current = true;
     };
 
     performMerge();
-  }, [isLoaded, isSignedIn, mergeCart, cartItems]);
+  }, [isLoaded, isSignedIn, mergeCart]); // Removed cartItems from dependency to avoid loop
 
   const value = useMemo(
     () => ({

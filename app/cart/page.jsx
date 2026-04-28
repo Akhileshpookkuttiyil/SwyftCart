@@ -11,7 +11,10 @@ import { useProducts } from "@/hooks/useProducts";
 import { useUserStore } from "@/store/useUserStore";
 import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
+import { useAuth } from "@clerk/nextjs";
+
 const Cart = () => {
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const currency = useUserStore((state) => state.currency);
   const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
@@ -39,7 +42,19 @@ const Cart = () => {
             <p className="text-2xl md:text-3xl text-gray-500">
               Your <span className="font-medium text-orange-600">Cart</span>
             </p>
-            <p className="text-lg md:text-xl text-gray-500/80">{getCartCount()} Items</p>
+            <div className="flex items-center gap-4">
+              <p className="text-lg md:text-xl text-gray-500/80">{getCartCount()} Items</p>
+              <button 
+                onClick={() => {
+                  if(confirm("Are you sure you want to clear your cart?")) {
+                    useCartStore.getState().clearCart(isSignedIn);
+                  }
+                }}
+                className="text-xs font-medium text-red-500 border border-red-100 px-3 py-1 rounded-md hover:bg-red-50 transition-all"
+              >
+                Clear Cart
+              </button>
+            </div>
           </div>
 
           {cartIds.length === 0 ? (
