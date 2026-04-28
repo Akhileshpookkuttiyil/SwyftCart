@@ -8,12 +8,12 @@ if (!global.mongoose) {
 
 async function connectDB() {
   if (cached.conn) {
-    console.log("[connectDB] Using cached connection");
+    // console.log("[connectDB] Using cached connection");
     return cached.conn;
   }
 
   if (!cached.promise) {
-    console.log("[connectDB] Creating new connection promise");
+    // console.log("[connectDB] Creating new connection promise");
     const opts = {
       bufferCommands: false,
     };
@@ -32,7 +32,7 @@ async function connectDB() {
     });
   }
 
-  console.log("[connectDB] Awaiting connection promise");
+  // console.log("[connectDB] Awaiting connection promise");
   cached.conn = await cached.promise;
   return cached.conn;
 }
