@@ -46,6 +46,7 @@ ProductGrid.displayName = "ProductGrid";
 const AllProductsContent = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+  const initialSearch = searchParams.get("search") || "";
   const isFavoritesTab = tab === "favourites";
 
   const { isSignedIn, isLoaded } = useAuth();
@@ -64,7 +65,13 @@ const AllProductsContent = () => {
   const products = productsData?.products || [];
   const pagination = productsData?.pagination;
 
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(initialSearch);
+
+  useEffect(() => {
+    if (initialSearch) {
+      setSearchInput(initialSearch);
+    }
+  }, [initialSearch]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
