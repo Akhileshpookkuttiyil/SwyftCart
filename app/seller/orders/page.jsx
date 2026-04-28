@@ -60,17 +60,19 @@ const Orders = () => {
                         orders.map((order) => (
                             <div key={order._id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-100 transition-all hover:shadow-md">
                                 <div className="p-6 flex gap-5 items-center bg-gray-50/30">
-                                    <div className="w-12 h-12 bg-white rounded-lg border border-gray-100 flex items-center justify-center shadow-sm">
+                                    <div className="w-12 h-12 bg-white rounded-lg border border-gray-100 flex items-center justify-center shadow-sm overflow-hidden">
                                         <Image
-                                            className="w-7 h-7 grayscale opacity-40"
-                                            src={assets.box_icon}
-                                            alt="box_icon"
+                                            className="w-full h-full object-cover"
+                                            src={order.items[0]?.image || assets.box_icon}
+                                            alt={order.items[0]?.name || "Product"}
+                                            width={48}
+                                            height={48}
                                         />
                                     </div>
                                     <div className="space-y-1">
                                         <div className="text-sm font-bold text-gray-900 leading-tight">
                                             {order.items.map((item, i) => (
-                                                <p key={i}>{item.product?.name || 'Deleted Product'} x {item.quantity}</p>
+                                                <p key={i}>{item.name} x {item.quantity}</p>
                                             ))}
                                         </div>
                                         <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
@@ -114,7 +116,12 @@ const Orders = () => {
                                          </div>
                                      </div>
                                      <div className="flex justify-between items-baseline pt-3 mt-3 border-t border-gray-100">
-                                         <span className="text-base font-bold text-gray-900">{formatPrice(order.amount)}</span>
+                                         <div className="flex flex-col">
+                                            <span className="text-[8px] text-gray-400 uppercase font-bold">Seller Share</span>
+                                            <span className="text-base font-bold text-gray-900">
+                                                {formatPrice(order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0))}
+                                            </span>
+                                         </div>
                                          <span className="text-[10px] text-gray-400 font-mono">{new Date(order.date).toLocaleDateString()}</span>
                                      </div>
                                 </div>

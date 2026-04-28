@@ -184,7 +184,8 @@ export const fetchSellerOrders = async (sellerId) => {
   // Filter items within each order to only include what belongs to the seller
   const filteredOrders = orders.map(order => {
     const orderObj = order.toObject();
-    orderObj.items = orderObj.items.filter(item => item.sellerId === sellerId);
+    // Ensure robust string comparison for IDs
+    orderObj.items = orderObj.items.filter(item => String(item.sellerId) === String(sellerId));
     return orderObj;
   });
 
@@ -198,7 +199,7 @@ export const updateOrderStatus = async (orderId, sellerId, status) => {
     const order = await Order.findById(orderId);
     if (!order) throw new AppError("Order not found", 404);
 
-    const isAuthorized = order.items.some(item => item.sellerId === sellerId);
+    const isAuthorized = order.items.some(item => String(item.sellerId) === String(sellerId));
     if (!isAuthorized) throw new AppError("Unauthorized", 403);
 
     order.status = status;

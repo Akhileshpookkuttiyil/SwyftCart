@@ -41,7 +41,13 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ razorpayOrderId: 1 }, { unique: true, sparse: true });
+orderSchema.index({ "items.sellerId": 1 }); // Index for seller dashboard filtering
 
+// In development, Next.js hot-reloading can cause issues with stale Mongoose models.
+// We clear the cached model to ensure the new schema (with sellerId) is picked up.
+if (process.env.NODE_ENV === 'development') {
+  delete mongoose.models.Order;
+}
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 export default Order;
