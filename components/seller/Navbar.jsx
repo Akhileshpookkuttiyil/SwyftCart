@@ -1,11 +1,11 @@
 import React from 'react'
 import { assets } from '../../assets/assets'
 import Image from 'next/image'
-import { useAppContext } from '@/context/AppContext'
+import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 
 const Navbar = () => {
-  const { router } = useAppContext()
+  const router = useRouter()
   const { user } = useUser()
 
   return (

@@ -3,14 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Menu, X, MapPin } from "lucide-react";
 import { Show, UserButton, SignInButton } from "@clerk/nextjs";
-import { useAppContext } from "@/context/AppContext";
+import { useUserStore } from "@/store/useUserStore";
+import { useCartStore } from "@/store/useCartStore";
 import { assets, BoxIcon, CartIcon, HeartIcon } from "@/assets/assets";
 import NavbarSearch from "./NavbarSearch";
 
 const Navbar = () => {
-  const { isSeller, router, getCartCount } = useAppContext();
+  const router = useRouter();
+  const isSeller = useUserStore((state) => state.isSeller);
+  const getCartCount = useCartStore((state) => state.getCartCount);
   const [isOpen, setIsOpen] = useState(false);
   const cartCount = getCartCount();
 

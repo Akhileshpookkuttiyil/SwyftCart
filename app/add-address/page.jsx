@@ -7,14 +7,15 @@ import { useState, useEffect, Suspense } from "react";
 import { createAddressRequest, fetchAddressByIdRequest, updateAddressRequest } from "@/lib/api/address";
 import { successToast, errorToast } from "@/lib/toast";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAppContext } from "@/context/AppContext";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Spinner } from "@heroui/react";
 
 const AddAddressForm = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const addressId = searchParams.get('id');
-    const { isSignedIn, isLoaded, openSignIn } = useAppContext();
+    const { isSignedIn, isLoaded } = useAuth();
+    const { openSignIn } = useClerk();
     
     useEffect(() => {
         if (isLoaded && !isSignedIn) {

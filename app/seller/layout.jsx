@@ -2,14 +2,17 @@
 import Navbar from '@/components/seller/Navbar'
 import Sidebar from '@/components/seller/Sidebar'
 import React, { useEffect } from 'react'
-import { useAppContext } from '@/context/AppContext'
 import { useRouter } from 'next/navigation'
+import { useAuth, useClerk } from '@clerk/nextjs'
+import { useUserStore } from '@/store/useUserStore'
 import Loading from '@/components/Loading'
 import { errorToast } from '@/lib/toast'
 
 const Layout = ({ children }) => {
-  const { isSeller, isLoaded, isSignedIn, openSignIn } = useAppContext()
   const router = useRouter()
+  const { isSignedIn, isLoaded } = useAuth()
+  const { openSignIn } = useClerk()
+  const isSeller = useUserStore((state) => state.isSeller)
 
   useEffect(() => {
     if (isLoaded) {

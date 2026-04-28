@@ -1,15 +1,16 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
 import Loading from "@/components/Loading";
 import { fetchSellerOrdersRequest, updateOrderStatusRequest } from "@/lib/api/order";
 import { errorToast, successToast } from "@/lib/toast";
+import { useUserStore } from "@/store/useUserStore";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
 const Orders = () => {
-
-    const { formatPrice } = useAppContext();
+    const currency = useUserStore((state) => state.currency);
+    const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);

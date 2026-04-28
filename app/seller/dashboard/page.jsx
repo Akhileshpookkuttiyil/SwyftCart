@@ -1,13 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Box, AlertCircle, Banknote, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
-import { useAppContext } from '@/context/AppContext';
+import { useUserStore } from '@/store/useUserStore';
+import { formatPrice as formatCurrencyValue } from '@/lib/formatPrice';
 import Image from 'next/image';
 
 const Dashboard = () => {
-    const { formatPrice } = useAppContext();
+    const currency = useUserStore((state) => state.currency);
+    const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
 

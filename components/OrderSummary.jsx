@@ -1,13 +1,25 @@
-import { useAppContext } from "@/context/AppContext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { Spinner } from "@heroui/react";
 import { placeOrderRequest } from "@/lib/api/order";
 import { fetchAddressesRequest } from "@/lib/api/address";
 import { errorToast, successToast } from "@/lib/toast";
+import { useCartStore } from "@/store/useCartStore";
+import { useUserStore } from "@/store/useUserStore";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
 const OrderSummary = () => {
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+  const currency = useUserStore((state) => state.currency);
+  const { cartItems, getCartCount, getCartAmount } = useCartStore();
 
-  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData, cartItems, isSignedIn, openSignIn } = useAppContext()
+  const formatPrice = useCallback(
+    (value) => formatCurrencyValue(value, currency),
+    [currency]
+  );
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -86,7 +98,6 @@ const OrderSummary = () => {
         if (data.success) {
             if (paymentMethod === "COD") {
               successToast("Order placed successfully!", "order-success");
-              fetchUserData();
               router.push('/order-placed');
             } else if (paymentMethod === "ONLINE") {
               if (!isScriptLoaded) {
@@ -114,7 +125,6 @@ const OrderSummary = () => {
                     const verifyData = await verifyRes.json();
                     if (verifyData.success) {
                       successToast("Payment successful!", "payment-success");
-                      fetchUserData();
                       router.push('/order-placed');
                     } else {
                       errorToast(verifyData.message || "Payment verification failed", "payment-failed");

@@ -5,10 +5,10 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { addProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
-import { useAppContext } from "@/context/AppContext";
+import { useUserStore } from "@/store/useUserStore";
 
 const AddProduct = () => {
-  const { currency } = useAppContext();
+  const currency = useUserStore((state) => state.currency);
   const [files, setFiles] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

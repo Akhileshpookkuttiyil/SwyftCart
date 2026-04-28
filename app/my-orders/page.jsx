@@ -1,16 +1,22 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Loading from "@/components/Loading";
 import { fetchUserOrdersRequest } from "@/lib/api/order";
+import { useUserStore } from "@/store/useUserStore";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
 const MyOrders = () => {
-
-    const { formatPrice, isSignedIn, isLoaded, router, openSignIn } = useAppContext();
+    const router = useRouter();
+    const { isSignedIn, isLoaded } = useAuth();
+    const { openSignIn } = useClerk();
+    const currency = useUserStore((state) => state.currency);
+    const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);

@@ -5,13 +5,15 @@ import Footer from "@/components/Footer";
 import { fetchAddressesRequest, deleteAddressRequest, setDefaultAddressRequest } from "@/lib/api/address";
 import { successToast, errorToast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
 import { Spinner } from "@heroui/react";
 
 const MyAddresses = () => {
-  const { isSignedIn, isLoaded, router, openSignIn } = useAppContext();
+  const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { openSignIn } = useClerk();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
 

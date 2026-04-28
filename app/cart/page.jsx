@@ -1,16 +1,22 @@
 'use client'
-import React from "react";
+import React, { useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
-import { useAppContext } from "@/context/AppContext";
 import { CartSkeleton } from "@/components/Skeletons";
 import useCart from "@/hooks/useCart";
+import { useProducts } from "@/hooks/useProducts";
+import { useUserStore } from "@/store/useUserStore";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 
 const Cart = () => {
-
-  const { products, productsLoading, router, formatPrice } = useAppContext();
+  const router = useRouter();
+  const currency = useUserStore((state) => state.currency);
+  const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
+  const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 100 });
+  const products = productsData?.products || [];
   const { cartItems, addToCart, updateCartQuantity, getCartCount } = useCart();
 
   if (productsLoading) {

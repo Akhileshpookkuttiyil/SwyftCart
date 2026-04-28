@@ -4,18 +4,21 @@ import React, { useCallback, useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { useAppContext } from "@/context/AppContext";
-
+import { useUser } from "@clerk/nextjs";
+import { useUserStore } from "@/store/useUserStore";
+import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
 import Loading from "@/components/Loading";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 import { fetchSellerProductsRequest, deleteProductRequest } from "@/lib/api/products";
 import { errorToast, successToast } from "@/lib/toast";
 import EditProductModal from "@/components/seller/EditProductModal";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 
 const ProductList = () => {
-  const { user, isLoaded, formatPrice, fetchProductData } = useAppContext();
+  const { user, isLoaded } = useUser();
+  const currency = useUserStore((state) => state.currency);
+  const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,8 +33,6 @@ const ProductList = () => {
       if (data.success) {
         successToast("Product deleted successfully", "delete-product-success");
         setProducts((prev) => prev.filter((p) => p._id !== id));
-        // Sync global state
-        fetchProductData();
       } else {
         errorToast(data.message || "Failed to delete product", "delete-product-error");
       }
@@ -50,8 +51,6 @@ const ProductList = () => {
       )
     );
     setEditingProduct(null);
-    // Sync global AppContext so that 'Visit' page sees the new data immediately
-    fetchProductData();
   };
 
 
