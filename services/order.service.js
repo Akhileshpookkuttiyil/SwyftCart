@@ -103,22 +103,24 @@ export const createOrder = async (userId, payload) => {
   // 4. Create the order and decrement stock atomically using a transaction
   const session = await mongoose.startSession();
   session.startTransaction();
+  console.time(`order-create-${userId}`);
 
   try {
     // Safely deduct stock using $inc and $gte condition to prevent race conditions
     // ONLY deduct stock here if it's COD. For ONLINE, we deduct upon successful payment.
     if (paymentMethod === "COD") {
-      for (const item of orderItems) {
-        const updateResult = await Product.findOneAndUpdate(
+      const stockUpdatePromises = orderItems.map(item => 
+        Product.findOneAndUpdate(
           { _id: item.product, stock: { $gte: item.quantity } },
           { $inc: { stock: -item.quantity } },
           { session, new: true }
-        );
+        )
+      );
 
-        if (!updateResult) {
-          // Race condition caught: stock dropped below requested quantity between snapshot and now
-          throw new AppError("Race condition: Product out of stock during checkout", 400);
-        }
+      const results = await Promise.all(stockUpdatePromises);
+
+      if (results.some(res => !res)) {
+        throw new AppError("One or more items went out of stock during checkout.", 400);
       }
     }
 
@@ -148,6 +150,7 @@ export const createOrder = async (userId, payload) => {
 
     await session.commitTransaction();
     session.endSession();
+    console.timeEnd(`order-create-${userId}`);
 
     if (paymentMethod === "COD") {
       return { success: true, message: "Order placed successfully", order };
@@ -211,6 +214,7 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
   await connectDB();
   const session = await mongoose.startSession();
   session.startTransaction();
+  console.time(`payment-verify-${orderId}`);
 
   try {
     const order = await Order.findById(orderId).session(session);
@@ -235,22 +239,24 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
     }
 
     // Deduct stock now that payment is successful
-    for (const item of order.items) {
-      const updateResult = await Product.findOneAndUpdate(
+    const stockUpdatePromises = order.items.map(item => 
+      Product.findOneAndUpdate(
         { _id: item.product, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
         { session, new: true }
-      );
+      )
+    );
 
-      if (!updateResult) {
-        // Stock ran out while order was pending
-        order.status = "cancelled";
-        order.paymentStatus = "failed";
-        await order.save({ session });
-        await session.commitTransaction();
-        session.endSession();
-        throw new AppError("Product went out of stock before payment was completed. Your payment will be refunded.", 400);
-      }
+    const results = await Promise.all(stockUpdatePromises);
+
+    if (results.some(res => !res)) {
+      // At least one product ran out of stock while payment was processing
+      order.status = "cancelled";
+      order.paymentStatus = "failed";
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+      throw new AppError("Product went out of stock before payment was completed. Your payment will be refunded.", 400);
     }
 
     order.paymentStatus = "paid";
@@ -260,6 +266,7 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
 
     await session.commitTransaction();
     session.endSession();
+    console.timeEnd(`payment-verify-${orderId}`);
     return order;
   } catch (error) {
     await session.abortTransaction();

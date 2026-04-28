@@ -14,7 +14,7 @@ const OrderSummary = ({ products }) => {
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const currency = useUserStore((state) => state.currency);
-  const { cartItems, getCartCount, getCartAmount } = useCartStore();
+  const { cartItems, getCartCount, getCartAmount, clearCart } = useCartStore();
 
   const formatPrice = useCallback(
     (value) => formatCurrencyValue(value, currency),
@@ -97,6 +97,8 @@ const OrderSummary = ({ products }) => {
         const data = await placeOrderRequest(payload);
         if (data.success) {
             if (paymentMethod === "COD") {
+              clearCart(isSignedIn);
+              console.timeEnd("order-placement-to-success");
               successToast("Order placed successfully!", "order-success");
               router.push('/order-placed');
             } else if (paymentMethod === "ONLINE") {
@@ -112,6 +114,7 @@ const OrderSummary = ({ products }) => {
                 order_id: data.razorpayOrderId,
                 handler: async function (response) {
                   try {
+                    console.time("payment-verification");
                     const verifyRes = await fetch('/api/order/verify', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -124,7 +127,10 @@ const OrderSummary = ({ products }) => {
                     });
                     const verifyData = await verifyRes.json();
                     if (verifyData.success) {
+                      clearCart(isSignedIn);
+                      console.timeEnd("payment-verification");
                       successToast("Payment successful!", "payment-success");
+                      // Fast redirect
                       router.push('/order-placed');
                     } else {
                       errorToast(verifyData.message || "Payment verification failed", "payment-failed");
