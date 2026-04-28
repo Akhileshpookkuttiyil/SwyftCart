@@ -19,7 +19,10 @@ export const useCartStore = create(
       // Initialize state (for merging guest cart)
       setCartItems: (items) => set({ cartItems: items }),
 
-      // Internal helper to sanitize items
+      /**
+       * Ensures cart items are valid numeric quantities
+       * @param {Object} items - raw cart object { productId: quantity }
+       */
       _sanitizeItems: (items) => {
         if (!items || typeof items !== "object" || Array.isArray(items)) return {};
         return Object.entries(items).reduce((acc, [id, qty]) => {
@@ -33,7 +36,6 @@ export const useCartStore = create(
         const currentItems = get().cartItems;
         const newItems = { ...currentItems, [productId]: (currentItems[productId] || 0) + 1 };
         
-        // Optimistic update
         set({ cartItems: newItems });
 
         if (!isSignedIn) {
@@ -48,7 +50,7 @@ export const useCartStore = create(
             successToast("Added to cart", "cart-success");
           }
         } catch (error) {
-          set({ cartItems: currentItems }); // Rollback
+          set({ cartItems: currentItems });
           errorToast(error.message || "Failed to add to cart");
         }
       },
@@ -60,7 +62,6 @@ export const useCartStore = create(
         if (quantity <= 0) delete newItems[productId];
         else newItems[productId] = Math.floor(quantity);
 
-        // Optimistic update
         set({ cartItems: newItems });
 
         if (!isSignedIn) return;
@@ -71,7 +72,7 @@ export const useCartStore = create(
             set({ cartItems: get()._sanitizeItems(response.cartItems) });
           }
         } catch (error) {
-          set({ cartItems: currentItems }); // Rollback
+          set({ cartItems: currentItems });
           errorToast(error.message || "Failed to update quantity");
         }
       },
@@ -89,7 +90,7 @@ export const useCartStore = create(
             successToast("Cart cleared");
           }
         } catch (error) {
-          set({ cartItems: currentItems }); // Rollback
+          set({ cartItems: currentItems });
           errorToast(error.message || "Failed to clear cart");
         }
       },
