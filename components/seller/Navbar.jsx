@@ -10,7 +10,15 @@ const Navbar = () => {
 
   return (
     <div className='flex items-center px-4 md:px-8 py-3 justify-between border-b bg-white'>
-      <Image onClick={() => router.push('/')} className='w-28 lg:w-32 cursor-pointer' src={assets.logo} alt="SwyftCart Logo" />
+      <Image 
+        onClick={() => router.push('/')} 
+        className='w-28 lg:w-32 cursor-pointer' 
+        src={assets.logo} 
+        alt="SwyftCart Logo" 
+        width={128}
+        height={40}
+        style={{ height: "auto" }}
+      />
       <div className="flex items-center gap-4">
         <div className="md:block hidden text-right">
           <p className="text-xs font-bold text-gray-900">{user?.fullName || 'Seller Dashboard'}</p>
