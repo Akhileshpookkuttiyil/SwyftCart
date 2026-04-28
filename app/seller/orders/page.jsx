@@ -61,7 +61,7 @@ const Orders = () => {
                         orders.map((order) => (
                             <div key={order._id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row transition-all hover:shadow-md">
                                 <div className="p-5 flex gap-4 items-center bg-gray-50/20 md:w-1/3">
-                                    <div className="w-14 h-14 bg-white rounded-lg border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                                    <div className="relative w-14 h-14 bg-white rounded-lg border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                                         <Image
                                             className="w-full h-full object-cover"
                                             src={order.items[0]?.image || assets.box_icon}
