@@ -65,7 +65,8 @@ export async function POST(req) {
       }
     } else if (event === "payment.failed") {
       // Payment failed
-      order.status = "failed";
+      order.status = "cancelled";
+      order.paymentStatus = "failed";
       order.payment = false;
       await order.save();
       // NOTE: Stock restoration is NOT needed because stock is now only deducted upon successful payment

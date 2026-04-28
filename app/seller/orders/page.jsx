@@ -93,28 +93,30 @@ const Orders = () => {
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">Order Summary</p>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xs text-gray-500">Method:</span>
-                                            <span className="text-xs font-bold text-gray-700">COD</span>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-xs text-gray-500">Status:</span>
-                                            <select 
-                                                value={order.status}
-                                                onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                                                className="text-[10px] px-1.5 py-1 bg-white border border-gray-200 rounded font-bold uppercase focus:ring-1 focus:ring-orange-500 outline-none cursor-pointer"
-                                            >
-                                                <option value="Order Placed">Order Placed</option>
-                                                <option value="Processing">Processing</option>
-                                                <option value="Shipped">Shipped</option>
-                                                <option value="Delivered">Delivered</option>
-                                                <option value="Cancelled">Cancelled</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-baseline pt-3 mt-3 border-t border-gray-100">
-                                        <span className="text-base font-bold text-gray-900">{formatPrice(order.amount)}</span>
-                                        <span className="text-[10px] text-gray-400 font-mono">{new Date(order.date).toLocaleDateString()}</span>
-                                    </div>
+                                             <span className="text-xs text-gray-500">Method:</span>
+                                             <span className="text-xs font-bold text-gray-700">{order.paymentMethod === 'ONLINE' ? 'Razorpay' : 'COD'}</span>
+                                         </div>
+                                         <div className="flex flex-col gap-1">
+                                             <span className="text-xs text-gray-500">Status:</span>
+                                             <select 
+                                                 value={order.status}
+                                                 onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
+                                                 className="text-[10px] px-1.5 py-1 bg-white border border-gray-200 rounded font-bold uppercase focus:ring-1 focus:ring-orange-500 outline-none cursor-pointer"
+                                             >
+                                                 <option value="pending">Pending</option>
+                                                 <option value="confirmed">Confirmed</option>
+                                                 <option value="processing">Processing</option>
+                                                 <option value="shipped">Shipped</option>
+                                                 <option value="out_for_delivery">Out for Delivery</option>
+                                                 <option value="delivered">Delivered</option>
+                                                 <option value="cancelled">Cancelled</option>
+                                             </select>
+                                         </div>
+                                     </div>
+                                     <div className="flex justify-between items-baseline pt-3 mt-3 border-t border-gray-100">
+                                         <span className="text-base font-bold text-gray-900">{formatPrice(order.amount)}</span>
+                                         <span className="text-[10px] text-gray-400 font-mono">{new Date(order.date).toLocaleDateString()}</span>
+                                     </div>
                                 </div>
                             </div>
                         ))

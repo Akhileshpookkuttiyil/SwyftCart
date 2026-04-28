@@ -93,8 +93,13 @@ const MyOrders = () => {
                                             </div>
                                             <div className="flex flex-col justify-center">
                                                 <p className="font-bold text-gray-900">{formatPrice(order.amount)}</p>
-                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded w-max mt-1 ${order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
-                                                    {order.status}
+                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded w-max mt-1 ${
+                                                    order.status === 'cancelled' || order.status === 'failed' ? 'bg-red-50 text-red-600' : 
+                                                    order.status === 'delivered' ? 'bg-green-50 text-green-600' :
+                                                    order.status === 'shipped' || order.status === 'out_for_delivery' ? 'bg-blue-50 text-blue-600' :
+                                                    'bg-orange-50 text-orange-600'
+                                                }`}>
+                                                    {order.status.replace(/_/g, ' ')}
                                                 </span>
                                             </div>
                                             <div className="md:text-right flex flex-col justify-center">

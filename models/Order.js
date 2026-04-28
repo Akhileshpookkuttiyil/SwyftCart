@@ -6,6 +6,7 @@ const orderSchema = new mongoose.Schema(
     items: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        sellerId: { type: String, required: true }, // Added for seller dashboard filtering
         name: { type: String, required: true },
         price: { type: Number, required: true },
         image: { type: String, required: true },
@@ -26,7 +27,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "pending",
-      enum: ["pending", "paid", "failed", "Order Placed", "Processing", "Shipped", "Delivered", "Cancelled", "confirmed"],
+      enum: ["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "returned", "failed"],
     },
     paymentMethod: { type: String, required: true },
     paymentStatus: { type: String, default: "pending" },

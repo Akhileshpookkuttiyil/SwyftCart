@@ -49,6 +49,7 @@ export const createOrder = async (userId, payload) => {
 
     orderItems.push({
       product: product._id,
+      sellerId: product.userId, // Map sellerId from product
       name: product.name,
       price: price,
       image: product.image[0],
@@ -175,29 +176,29 @@ export const fetchOrdersByUserId = async (userId) => {
 export const fetchSellerOrders = async (sellerId) => {
   await connectDB();
   
-  // Logic: An order is a 'seller order' if it contains any product owned by this seller
-  // In a multi-vendor setup, we usually filter items.
-  // For SwyftCart, we'll fetch orders that contain products belonging to the seller.
-  
-  const sellerProducts = await Product.find({ userId: sellerId }).select("_id");
-  const productIds = sellerProducts.map(p => p._id);
-
-  return Order.find({ "items.product": { $in: productIds } })
+  // Fetch orders that contain items belonging to this seller
+  const orders = await Order.find({ "items.sellerId": sellerId })
     .populate("items.product")
     .sort({ createdAt: -1 });
+
+  // Filter items within each order to only include what belongs to the seller
+  const filteredOrders = orders.map(order => {
+    const orderObj = order.toObject();
+    orderObj.items = orderObj.items.filter(item => item.sellerId === sellerId);
+    return orderObj;
+  });
+
+  return filteredOrders;
 };
 
 export const updateOrderStatus = async (orderId, sellerId, status) => {
     await connectDB();
     
-    // Auth check: Seller should own at least one product in this order
-    const sellerProducts = await Product.find({ userId: sellerId }).select("_id");
-    const productIds = new Set(sellerProducts.map(p => String(p._id)));
-
+    // Auth check: Seller should own at least one item in this order
     const order = await Order.findById(orderId);
     if (!order) throw new AppError("Order not found", 404);
 
-    const isAuthorized = order.items.some(item => productIds.has(String(item.product)));
+    const isAuthorized = order.items.some(item => item.sellerId === sellerId);
     if (!isAuthorized) throw new AppError("Unauthorized", 403);
 
     order.status = status;
@@ -223,8 +224,8 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
 
     // Verify amount if provided (Razorpay amounts are in paise)
     if (paymentAmount && paymentAmount !== Math.round(order.amount * 100)) {
-       // Amount mismatch! Mark as failed.
-       order.status = "failed";
+       // Amount mismatch! Mark as cancelled.
+       order.status = "cancelled";
        order.paymentStatus = "failed";
        await order.save({ session });
        await session.commitTransaction();
@@ -242,7 +243,7 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
 
       if (!updateResult) {
         // Stock ran out while order was pending
-        order.status = "failed";
+        order.status = "cancelled";
         order.paymentStatus = "failed";
         await order.save({ session });
         await session.commitTransaction();

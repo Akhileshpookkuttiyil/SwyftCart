@@ -112,9 +112,10 @@ export const updatePaymentStatusController = withController(
       throw new AppError("Payment verification failed", 400);
     }
 
-    // Do NOT update order status here. The webhook is the single source of truth.
-    // We just return success to the frontend so it can redirect the user.
-    return createSuccessResponse({ success: true, message: "Payment verified locally. Awaiting webhook confirmation." });
+    // Perform verification and status update
+    const order = await verifyPayment(orderId, razorpay_payment_id);
+    
+    return createSuccessResponse({ success: true, message: "Payment verified successfully", order });
   },
   {
     fallbackMessage: "Payment verification failed",
