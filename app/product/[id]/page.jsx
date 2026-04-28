@@ -43,7 +43,7 @@ export default async function ProductPage({ params }) {
   return (
     <>
       <Navbar />
-      <main className="px-6 md:px-16 lg:px-32 pt-4 pb-20 space-y-12">
+      <main className="px-6 md:px-16 lg:px-32 pt-10 pb-20 space-y-12">
         <section>
           <ProductDetailsClient productData={productData} />
         </section>

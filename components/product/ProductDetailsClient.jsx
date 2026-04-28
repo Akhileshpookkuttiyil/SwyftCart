@@ -77,20 +77,20 @@ export default function ProductDetailsClient({ productData }) {
           </button>
         </div>
 
-        {/* Smaller Thumbnails */}
-        <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+        {/* Reduced Thumbnails */}
+        <div className="flex flex-wrap gap-2">
           {(productData.image || []).map((image, index) => (
             <div
               key={index}
               onClick={() => setMainImage(image)}
-              className={`cursor-pointer rounded-md overflow-hidden bg-gray-500/10 aspect-square relative border-2 transition-colors ${mainImage === image ? "border-orange-400" : "border-transparent"}`}
+              className={`cursor-pointer w-12 h-12 rounded-md overflow-hidden bg-gray-500/10 relative border-2 transition-colors ${mainImage === image ? "border-orange-400" : "border-transparent"}`}
             >
               <Image
                 src={image || assets.upload_area}
                 alt={`${productData.name} preview ${index + 1}`}
                 className="w-full h-full object-cover mix-blend-multiply"
                 fill
-                sizes="60px"
+                sizes="48px"
               />
             </div>
           ))}
