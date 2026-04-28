@@ -20,6 +20,7 @@ const orderSchema = new mongoose.Schema(
       area: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
+      country: { type: String, required: true, default: "India" },
     },
     status: {
       type: String,

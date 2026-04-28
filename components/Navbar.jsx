@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, MapPin } from "lucide-react";
 import { Show, UserButton, SignInButton } from "@clerk/nextjs";
 import { useAppContext } from "@/context/AppContext";
 import { assets, BoxIcon, CartIcon, HeartIcon } from "@/assets/assets";
@@ -104,6 +104,11 @@ const Navbar = () => {
                 onClick={() => router.push("/my-orders")}
               />
               <UserButton.Action
+                label="My Addresses"
+                labelIcon={<MapPin size={16} />}
+                onClick={() => router.push("/my-addresses")}
+              />
+              <UserButton.Action
                 label="Favourites"
                 labelIcon={<HeartIcon />}
                 onClick={() => router.push("/all-products?tab=favourites")}
@@ -111,6 +116,7 @@ const Navbar = () => {
             </UserButton.MenuItems>
           </UserButton>
         </Show>
+
 
         {/* Mobile Hamburger */}
         <button

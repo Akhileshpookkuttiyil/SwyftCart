@@ -1,5 +1,5 @@
 "use client";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -61,6 +61,7 @@ export const AppContextProvider = ({ children }) => {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const { getToken, isSignedIn, signOut } = useAuth();
+  const { openSignIn } = useClerk();
 
   const { data: productData, isLoading: productsLoading, refetch: fetchProductData } = useProducts({ limit: 50 });
   const products = productData?.products || [];
@@ -172,7 +173,7 @@ export const AppContextProvider = ({ children }) => {
         } catch (error) {
           console.error("Update cart error:", error);
           if (error?.status === 401 && isLoaded) {
-            router.push("/sign-in");
+            openSignIn();
           }
           setCartItems(previous);
           errorToast(error?.message || "Failed to update cart", "cart-error");
@@ -208,7 +209,7 @@ export const AppContextProvider = ({ children }) => {
       } catch (error) {
         console.error("Add to cart error:", error);
         if (error?.status === 401 && isLoaded) {
-          router.push("/sign-in");
+          openSignIn();
         }
         setCartItems(previous);
         errorToast(error?.message || "Failed to add to cart", "cart-error");
@@ -236,7 +237,7 @@ export const AppContextProvider = ({ children }) => {
     } catch (error) {
       console.error("Clear cart error:", error);
       if (error?.status === 401 && isLoaded) {
-        router.push("/sign-in");
+        openSignIn();
       }
       setCartItems(previous);
       errorToast(error?.message || "Failed to clear cart", "cart-error");
@@ -246,8 +247,7 @@ export const AppContextProvider = ({ children }) => {
   const toggleFavorite = useCallback(
     async (itemId) => {
       if (!isSignedIn) {
-        errorToast("Please login to add favorites", "favorites-auth-error");
-        router.push("/sign-in");
+        openSignIn();
         return;
       }
 
@@ -270,7 +270,7 @@ export const AppContextProvider = ({ children }) => {
       } catch (error) {
         console.error("Toggle favorites error:", error);
         if (error?.status === 401 && isLoaded) {
-          router.push("/sign-in");
+          openSignIn();
         }
         setFavorites(previous);
         errorToast(error?.message || "Failed to update favorites", "favorites-error");
@@ -298,7 +298,7 @@ export const AppContextProvider = ({ children }) => {
     } catch (error) {
       console.error("Clear favorites error:", error);
       if (error?.status === 401 && isLoaded) {
-        router.push("/sign-in");
+        openSignIn();
       }
       setFavorites(previous);
       errorToast(
@@ -437,6 +437,7 @@ export const AppContextProvider = ({ children }) => {
       productsLoading,
       fetchProductData,
       fetchUserData,
+      openSignIn,
     }),
     [
       user,
@@ -464,6 +465,7 @@ export const AppContextProvider = ({ children }) => {
       productsLoading,
       fetchProductData,
       fetchUserData,
+      openSignIn,
     ]
   );
 

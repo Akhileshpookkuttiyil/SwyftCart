@@ -40,13 +40,15 @@ const AllProductsContent = () => {
     products: allAvailableProducts,
     isSignedIn,
     isLoaded,
+    router,
+    openSignIn,
   } = useAppContext();
 
   useEffect(() => {
     if (isLoaded && !isSignedIn && isFavoritesTab) {
-      router.push("/sign-in");
+      openSignIn();
     }
-  }, [isLoaded, isSignedIn, isFavoritesTab, router]);
+  }, [isLoaded, isSignedIn, isFavoritesTab, openSignIn]);
 
   const [page, setPage] = useState(1);
   const { data: productsData, isLoading: productsLoading } = useProducts({ page, limit: 10 });

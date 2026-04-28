@@ -10,12 +10,13 @@ import { fetchUserOrdersRequest } from "@/lib/api/order";
 
 const MyOrders = () => {
 
-    const { formatPrice } = useAppContext();
+    const { formatPrice, isSignedIn, isLoaded, router, openSignIn } = useAppContext();
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchOrders = async () => {
+        if (!isSignedIn) return;
         try {
             const data = await fetchUserOrdersRequest();
             if (data.success) {
@@ -29,8 +30,14 @@ const MyOrders = () => {
     }
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        if (isLoaded) {
+            if (isSignedIn) {
+                fetchOrders();
+            } else {
+                openSignIn();
+            }
+        }
+    }, [isLoaded, isSignedIn, openSignIn]);
 
     return (
         <>
@@ -78,6 +85,8 @@ const MyOrders = () => {
                                                     <span className="text-gray-500">{order.address.area}</span>
                                                     <br />
                                                     <span className="text-gray-500">{`${order.address.city}, ${order.address.state}`}</span>
+                                                    <br />
+                                                    <span className="text-gray-500">{order.address.country || "India"}</span>
                                                     <br />
                                                     <span className="text-gray-500">{order.address.phoneNumber}</span>
                                                 </p>

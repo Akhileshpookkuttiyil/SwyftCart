@@ -1,12 +1,12 @@
-import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import { placeOrderRequest } from "@/lib/api/order";
+import { fetchAddressesRequest } from "@/lib/api/address";
 import { errorToast, successToast } from "@/lib/toast";
 
 const OrderSummary = () => {
 
-  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData, cartItems } = useAppContext()
+  const { formatPrice, router, getCartCount, getCartAmount, fetchUserData, cartItems, isSignedIn, openSignIn } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -14,9 +14,28 @@ const OrderSummary = () => {
   const [isPlacing, setIsPlacing] = useState(false);
 
   const [userAddresses, setUserAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
 
   const fetchUserAddresses = async () => {
-    setUserAddresses(addressDummyData);
+    if (!isSignedIn) {
+      setLoadingAddresses(false);
+      return;
+    }
+    try {
+      setLoadingAddresses(true);
+      const data = await fetchAddressesRequest();
+      if (data.success) {
+        setUserAddresses(data.addresses);
+        if (data.addresses.length > 0) {
+          const defaultAddr = data.addresses.find(a => a.isDefault) || data.addresses[0];
+          setSelectedAddress(defaultAddr);
+        }
+      }
+    } catch (error) {
+      console.error("Fetch addresses error:", error);
+    } finally {
+      setLoadingAddresses(false);
+    }
   }
 
   const handleAddressSelect = (address) => {
@@ -36,6 +55,10 @@ const OrderSummary = () => {
   }, []);
 
   const createOrder = async () => {
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
     if (!selectedAddress) {
         return errorToast("Please select a delivery address", "address-error");
     }
@@ -125,8 +148,12 @@ const OrderSummary = () => {
   }
 
   useEffect(() => {
-    fetchUserAddresses();
-  }, [])
+    if (isSignedIn) {
+      fetchUserAddresses();
+    } else {
+      setLoadingAddresses(false);
+    }
+  }, [isSignedIn])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
@@ -141,13 +168,18 @@ const OrderSummary = () => {
           </label>
           <div className="relative inline-block w-full text-sm border">
             <button
-              className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none"
+              className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none disabled:opacity-70"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              disabled={loadingAddresses}
             >
               <span>
-                {selectedAddress
-                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
-                  : "Select Address"}
+                {loadingAddresses 
+                  ? "Loading addresses..." 
+                  : selectedAddress
+                    ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
+                    : userAddresses.length === 0 
+                      ? "No addresses found - Please add one"
+                      : "Select Address"}
               </span>
               <svg className={`w-5 h-5 inline float-right transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#6B7280"
@@ -157,19 +189,30 @@ const OrderSummary = () => {
             </button>
 
             {isDropdownOpen && (
-              <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5">
-                {userAddresses.map((address, index) => (
-                  <li
-                    key={index}
-                    className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
-                    onClick={() => handleAddressSelect(address)}
-                  >
-                    {address.fullName}, {address.area}, {address.city}, {address.state}
-                  </li>
-                ))}
+              <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5 max-h-60 overflow-y-auto">
+                {userAddresses.length > 0 ? (
+                  userAddresses.map((address, index) => (
+                    <li
+                      key={address._id || index}
+                      className={`px-4 py-2 hover:bg-gray-500/10 cursor-pointer ${selectedAddress?._id === address._id ? "bg-orange-50 border-l-2 border-orange-600" : ""}`}
+                      onClick={() => handleAddressSelect(address)}
+                    >
+                      <p className="font-medium">{address.fullName} {address.isDefault && <span className="text-[10px] text-orange-600 font-bold ml-1">(Default)</span>}</p>
+                      <p className="text-xs text-gray-500 truncate">{address.area}, {address.city}</p>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-3 text-gray-400 text-center italic">No saved addresses</li>
+                )}
                 <li
-                  onClick={() => router.push("/add-address")}
-                  className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center"
+                  onClick={() => {
+                    if (!isSignedIn) {
+                      openSignIn();
+                    } else {
+                      router.push("/add-address");
+                    }
+                  }}
+                  className="px-4 py-2.5 hover:bg-gray-500/10 cursor-pointer text-center text-orange-600 font-medium border-t mt-1"
                 >
                   + Add New Address
                 </li>

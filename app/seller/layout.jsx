@@ -5,16 +5,22 @@ import React, { useEffect } from 'react'
 import { useAppContext } from '@/context/AppContext'
 import { useRouter } from 'next/navigation'
 import Loading from '@/components/Loading'
+import { errorToast } from '@/lib/toast'
 
 const Layout = ({ children }) => {
-  const { isSeller, isLoaded, isSignedIn } = useAppContext()
+  const { isSeller, isLoaded, isSignedIn, openSignIn } = useAppContext()
   const router = useRouter()
 
   useEffect(() => {
-    if (isLoaded && (!isSignedIn || !isSeller)) {
-      router.push('/')
+    if (isLoaded) {
+      if (!isSignedIn) {
+        openSignIn();
+      } else if (!isSeller) {
+        errorToast("You do not have seller permissions", "auth-error");
+        router.push('/')
+      }
     }
-  }, [isSeller, isLoaded, isSignedIn, router])
+  }, [isSeller, isLoaded, isSignedIn, router, openSignIn])
 
   if (!isLoaded || !isSeller) {
     return (

@@ -83,7 +83,7 @@ const Orders = () => {
                                     <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Customer & Address</p>
                                     <p className="text-gray-900 font-medium">{order.address.fullName}</p>
                                     <p className="text-gray-500 text-xs leading-relaxed mt-0.5">
-                                        {order.address.area}, {order.address.city}, {order.address.state}
+                                        {order.address.area}, {order.address.city}, {order.address.state}, {order.address.country || "India"}
                                         <br />
                                         {order.address.phoneNumber}
                                     </p>
