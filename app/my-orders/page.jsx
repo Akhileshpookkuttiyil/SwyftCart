@@ -1,5 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { assets } from "@/assets/assets";
@@ -18,32 +19,17 @@ const MyOrders = () => {
     const currency = useUserStore((state) => state.currency);
     const formatPrice = useCallback((v) => formatCurrencyValue(v, currency), [currency]);
 
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { 
+      data, 
+      isLoading: loading 
+    } = useQuery({
+      queryKey: ["orders", isSignedIn],
+      queryFn: fetchUserOrdersRequest,
+      enabled: isLoaded && isSignedIn,
+    });
 
-    const fetchOrders = async () => {
-        if (!isSignedIn) return;
-        try {
-            const data = await fetchUserOrdersRequest();
-            if (data.success) {
-                setOrders(data.orders);
-            }
-        } catch (error) {
-            console.error("Fetch orders error:", error);
-        } finally {
-            setLoading(false);
-        }
-    }
+    const orders = data?.orders || [];
 
-    useEffect(() => {
-        if (isLoaded) {
-            if (isSignedIn) {
-                fetchOrders();
-            } else {
-                openSignIn();
-            }
-        }
-    }, [isLoaded, isSignedIn, openSignIn]);
 
     return (
         <>
@@ -56,7 +42,7 @@ const MyOrders = () => {
                             {orders.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-center">
                                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                        <Image src={assets.box_icon} alt="box_icon" className="w-8 h-8 opacity-20" />
+                                        <Image src={assets.box_icon} alt="box_icon" width={32} height={32} className="opacity-20" style={{ height: "auto", width: "auto" }} />
                                     </div>
                                     <h3 className="text-lg font-medium text-gray-800">No orders yet</h3>
                                     <p className="text-gray-500 mt-1">When you place an order, it will appear here.</p>
@@ -67,11 +53,13 @@ const MyOrders = () => {
                                             <div className="flex-1 flex gap-5">
                                                 <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
                                                     <Image
-                                                        className="w-full h-full object-cover"
+                                                        className="object-cover"
                                                         src={order.items[0]?.image || assets.box_icon}
                                                         alt="Order Item"
                                                         fill
+                                                        sizes="80px"
                                                     />
+
                                                 </div>
                                                 <div className="flex flex-col justify-between py-0.5">
                                                     <div>

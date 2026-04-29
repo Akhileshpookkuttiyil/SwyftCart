@@ -12,10 +12,13 @@ export const useProducts = (options = {}) => {
     search = "", 
     category = "", 
     sort = {},
+    ids = [],
+    enabled = true,
     initialData
   } = options;
 
-  const queryKey = ["products", { page, limit, search, category, sort }];
+  const normalizedIds = Array.isArray(ids) ? ids.filter(Boolean).sort().join(",") : ids;
+  const queryKey = ["products", { page, limit, search, category, sort, ids: normalizedIds }];
 
   return useQuery({
     queryKey,
@@ -25,6 +28,7 @@ export const useProducts = (options = {}) => {
         limit,
         search,
         category,
+        ids: normalizedIds || undefined,
         ...sort,
       });
 
@@ -42,6 +46,7 @@ export const useProducts = (options = {}) => {
         },
       };
     },
+    enabled,
     initialData,
     placeholderData: (prev) => prev, // Maintain UI stability during pagination in v5
     staleTime: 5 * 60 * 1000, // 5 minutes

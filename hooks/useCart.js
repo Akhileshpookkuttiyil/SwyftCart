@@ -18,7 +18,7 @@ export const useCart = () => {
       cartItems,
       addToCart: (id) => addToCartZustand(id, isSignedIn),
       updateCartQuantity: (id, qty) => updateQuantity(id, qty, isSignedIn),
-      clearCart: () => clearCartZustand(isSignedIn),
+      clearCart: (options) => clearCartZustand(isSignedIn, options),
       getCartAmount,
       getCartCount,
     }),
@@ -35,5 +35,4 @@ export const useCart = () => {
 };
 
 export default useCart;
-
 

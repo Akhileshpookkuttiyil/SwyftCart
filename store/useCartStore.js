@@ -33,12 +33,15 @@ export const useCartStore = create(
       },
 
       addToCart: async (productId, isSignedIn) => {
+        if (get().isSyncing) return; // Prevent concurrent writes
+        
         const currentItems = get().cartItems;
         const newItems = { ...currentItems, [productId]: (currentItems[productId] || 0) + 1 };
         
-        set({ cartItems: newItems });
+        set({ cartItems: newItems, isSyncing: true });
 
         if (!isSignedIn) {
+          set({ isSyncing: false });
           successToast("Added to cart", "cart-success");
           return;
         }
@@ -52,19 +55,26 @@ export const useCartStore = create(
         } catch (error) {
           set({ cartItems: currentItems });
           errorToast(error.message || "Failed to add to cart");
+        } finally {
+          set({ isSyncing: false });
         }
       },
 
       updateQuantity: async (productId, quantity, isSignedIn) => {
+        if (get().isSyncing) return;
+        
         const currentItems = get().cartItems;
         const newItems = { ...currentItems };
         
         if (quantity <= 0) delete newItems[productId];
         else newItems[productId] = Math.floor(quantity);
 
-        set({ cartItems: newItems });
+        set({ cartItems: newItems, isSyncing: true });
 
-        if (!isSignedIn) return;
+        if (!isSignedIn) {
+          set({ isSyncing: false });
+          return;
+        }
 
         try {
           const response = await updateCartItemRequest(productId, quantity);
@@ -74,10 +84,12 @@ export const useCartStore = create(
         } catch (error) {
           set({ cartItems: currentItems });
           errorToast(error.message || "Failed to update quantity");
+        } finally {
+          set({ isSyncing: false });
         }
       },
 
-      clearCart: async (isSignedIn) => {
+      clearCart: async (isSignedIn, options = {}) => {
         const currentItems = get().cartItems;
         set({ cartItems: {} });
 
@@ -87,7 +99,9 @@ export const useCartStore = create(
           const response = await clearCartRequest();
           if (response.success) {
             set({ cartItems: {} });
-            successToast("Cart cleared");
+            if (!options.silent) {
+              successToast("Cart cleared");
+            }
           }
         } catch (error) {
           set({ cartItems: currentItems });
@@ -96,7 +110,8 @@ export const useCartStore = create(
       },
 
       mergeCart: async (guestItems) => {
-        if (!Object.keys(guestItems).length) return;
+        if (!Object.keys(guestItems).length || get().isSyncing) return;
+        set({ isSyncing: true });
         try {
           const response = await mergeGuestCartRequest(guestItems);
           if (response.success) {
@@ -104,6 +119,8 @@ export const useCartStore = create(
           }
         } catch (error) {
           console.error("Cart merge error:", error);
+        } finally {
+          set({ isSyncing: false });
         }
       },
 

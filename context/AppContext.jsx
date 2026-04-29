@@ -81,16 +81,32 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || mergedGuestStateRef.current) return;
 
+    // Use sessionStorage to prevent re-merging on every refresh in the same session
+    const isAlreadyMerged = sessionStorage.getItem("swyftcart_cart_merged");
+    if (isAlreadyMerged) {
+      mergedGuestStateRef.current = true;
+      return;
+    }
+
     const performMerge = async () => {
-      // Only merge if there's actually something in the local cart before we fetch the remote one
-      if (Object.keys(cartItems).length > 0) {
-        await mergeCart(cartItems);
+      const itemsToMerge = Object.keys(cartItems).length;
+      if (itemsToMerge > 0) {
+        try {
+          await mergeCart(cartItems);
+          // CRITICAL: Clear local cart after merge to prevent re-merging
+          setCartItems({}); 
+          sessionStorage.setItem("swyftcart_cart_merged", "true");
+        } catch (error) {
+          console.error("Merge cart failed:", error);
+        }
       }
       mergedGuestStateRef.current = true;
     };
 
     performMerge();
-  }, [isLoaded, isSignedIn, mergeCart]); // Removed cartItems from dependency to avoid loop
+  }, [isLoaded, isSignedIn, mergeCart, setCartItems]);
+
+
 
   const value = useMemo(
     () => ({

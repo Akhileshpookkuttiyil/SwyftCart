@@ -1,20 +1,26 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { Spinner } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { placeOrderRequest } from "@/lib/api/order";
 import { fetchAddressesRequest } from "@/lib/api/address";
-import { errorToast, successToast } from "@/lib/toast";
+import { errorToast } from "@/lib/toast";
 import { useCartStore } from "@/store/useCartStore";
 import { useUserStore } from "@/store/useUserStore";
 import { formatPrice as formatCurrencyValue } from "@/lib/formatPrice";
+const OrderSummary = ({ products, onSuccess }) => {
 
-const OrderSummary = ({ products }) => {
+
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const currency = useUserStore((state) => state.currency);
-  const { cartItems, getCartCount, getCartAmount, clearCart } = useCartStore();
+  const { cartItems, getCartCount, getCartAmount } = useCartStore();
+  const subtotal = useMemo(() => getCartAmount(products), [cartItems, products, getCartAmount]);
+  const tax = useMemo(() => Math.floor(subtotal * 0.02), [subtotal]);
+  const total = useMemo(() => subtotal + tax, [subtotal, tax]);
 
   const formatPrice = useCallback(
     (value) => formatCurrencyValue(value, currency),
@@ -25,11 +31,15 @@ const OrderSummary = ({ products }) => {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isPlacing, setIsPlacing] = useState(false);
+  const paymentHandlerInProgress = React.useRef(false);
+
+
+
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
 
-  const fetchUserAddresses = async () => {
+  const fetchUserAddresses = useCallback(async () => {
     if (!isSignedIn) {
       setLoadingAddresses(false);
       return;
@@ -49,7 +59,7 @@ const OrderSummary = ({ products }) => {
     } finally {
       setLoadingAddresses(false);
     }
-  }
+  }, [isSignedIn]);
 
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
@@ -57,15 +67,47 @@ const OrderSummary = ({ products }) => {
   };
 
   useEffect(() => {
+    if (paymentMethod !== "ONLINE" || isScriptLoaded) return;
+
     const loadRazorpayScript = () => {
+      const existingScript = document.getElementById("razorpay-checkout-js");
+      if (existingScript) {
+        setIsScriptLoaded(true);
+        return;
+      }
+
       const script = document.createElement("script");
+      script.id = "razorpay-checkout-js";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
       script.onload = () => setIsScriptLoaded(true);
       script.onerror = () => console.error("Failed to load Razorpay script");
       document.body.appendChild(script);
     };
     loadRazorpayScript();
-  }, []);
+  }, [isScriptLoaded, paymentMethod]);
+
+  const handleOrderSuccess = useCallback(async (orderId) => {
+    try {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+      if (onSuccess) {
+        onSuccess(orderId);
+      } else {
+        router.push(`/order-success?orderId=${orderId}`);
+      }
+
+    } catch (error) {
+      console.error("Order success handling error:", error);
+      router.push('/order-success');
+    }
+  }, [router, queryClient, onSuccess]);
+
+
+
+
+
+
 
   const createOrder = async () => {
     if (!isSignedIn) {
@@ -84,26 +126,23 @@ const OrderSummary = ({ products }) => {
         return errorToast("Your cart is empty", "cart-error");
     }
 
-    const amount = getCartAmount(products) + Math.floor(getCartAmount(products) * 0.02);
-
     try {
         setIsPlacing(true);
         const payload = {
             address: selectedAddress,
             items,
-            amount,
+            amount: total,
             paymentMethod
         };
         const data = await placeOrderRequest(payload);
         if (data.success) {
             if (paymentMethod === "COD") {
-              clearCart(isSignedIn);
-              console.timeEnd("order-placement-to-success");
-              successToast("Order placed successfully!", "order-success");
-              router.push('/order-placed');
+              await handleOrderSuccess(data.order._id);
             } else if (paymentMethod === "ONLINE") {
               if (!isScriptLoaded) {
-                return errorToast("Razorpay SDK not loaded", "rzp-error");
+                errorToast("Razorpay SDK not loaded yet. Please try again.", "rzp-error");
+                setIsPlacing(false);
+                return;
               }
               const options = {
                 key: data.key,
@@ -113,8 +152,11 @@ const OrderSummary = ({ products }) => {
                 description: "Order Payment",
                 order_id: data.razorpayOrderId,
                 handler: async function (response) {
+                  // Prevent duplicate execution
+                  if (paymentHandlerInProgress.current) return;
+                  paymentHandlerInProgress.current = true;
+
                   try {
-                    console.time("payment-verification");
                     const verifyRes = await fetch('/api/order/verify', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -127,29 +169,35 @@ const OrderSummary = ({ products }) => {
                     });
                     const verifyData = await verifyRes.json();
                     if (verifyData.success) {
-                      clearCart(isSignedIn);
-                      console.timeEnd("payment-verification");
-                      successToast("Payment successful!", "payment-success");
-                      // Fast redirect
-                      router.push('/order-placed');
+                      await handleOrderSuccess(data.orderId);
                     } else {
                       errorToast(verifyData.message || "Payment verification failed", "payment-failed");
                     }
                   } catch (error) {
                     errorToast("Payment verification failed", "payment-failed");
+                  } finally {
+                    paymentHandlerInProgress.current = false;
                   }
                 },
                 prefill: {
                   name: selectedAddress.fullName,
                   contact: selectedAddress.phoneNumber,
                 },
+                modal: {
+                  ondismiss: function() {
+                    setIsPlacing(false);
+                    paymentHandlerInProgress.current = false;
+                  }
+                },
                 theme: {
-                  color: "#ea580c" // Tailwind orange-600
+                  color: "#ea580c"
                 }
               };
               const rzp = new window.Razorpay(options);
               rzp.on('payment.failed', function (response){
                  errorToast("Payment failed: " + response.error.description, "payment-failed");
+                 setIsPlacing(false);
+                 paymentHandlerInProgress.current = false;
               });
               rzp.open();
             }
@@ -159,10 +207,14 @@ const OrderSummary = ({ products }) => {
     } catch (error) {
         console.error("Place order error:", error);
         errorToast(error.message || "Failed to place order", "order-error");
-    } finally {
         setIsPlacing(false);
+    } finally {
+      if (paymentMethod !== "ONLINE") {
+        setIsPlacing(false);
+      }
     }
   }
+
 
   useEffect(() => {
     if (isSignedIn) {
@@ -170,7 +222,7 @@ const OrderSummary = ({ products }) => {
     } else {
       setLoadingAddresses(false);
     }
-  }, [isSignedIn])
+  }, [fetchUserAddresses, isSignedIn])
 
   return (
     <div className="w-full md:w-96 bg-gray-500/5 p-5">
@@ -259,7 +311,7 @@ const OrderSummary = ({ products }) => {
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items {getCartCount()}</p>
-            <p className="text-gray-800">{formatPrice(getCartAmount(products))}</p>
+            <p className="text-gray-800">{formatPrice(subtotal)}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Shipping Fee</p>
@@ -268,12 +320,12 @@ const OrderSummary = ({ products }) => {
           <div className="flex justify-between">
             <p className="text-gray-600">Tax (2%)</p>
             <p className="font-medium text-gray-800">
-              {formatPrice(Math.floor(getCartAmount(products) * 0.02))}
+              {formatPrice(tax)}
             </p>
           </div>
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
-            <p>{formatPrice(getCartAmount(products) + Math.floor(getCartAmount(products) * 0.02))}</p>
+            <p>{formatPrice(total)}</p>
           </div>
         </div>
         
@@ -321,6 +373,7 @@ const OrderSummary = ({ products }) => {
           </>
         ) : "Place Order"}
       </button>
+
     </div>
   );
 };

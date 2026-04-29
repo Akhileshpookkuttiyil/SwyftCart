@@ -10,14 +10,12 @@ export const createOrder = async (userId, payload) => {
   await connectDB();
   const { addressData, items, amount: clientAmount, paymentMethod } = payload;
 
-  // 1. Validate payload items
   if (!items || items.length === 0) {
     throw new AppError("Cart is empty", 400);
   }
 
   const productIds = items.map(item => item.product);
 
-  // 2. Fetch products to validate and calculate amounts
   const products = await Product.find({ _id: { $in: productIds } });
   
   const orderItems = [];
@@ -26,7 +24,7 @@ export const createOrder = async (userId, payload) => {
 
   items.forEach((item) => {
     const product = products.find((p) => String(p._id) === String(item.product));
-    if (!product) return; // Skip if product died
+    if (!product) return;
 
     const quantity = Number(item.quantity);
     if (quantity <= 0) return;
@@ -49,7 +47,7 @@ export const createOrder = async (userId, payload) => {
 
     orderItems.push({
       product: product._id,
-      sellerId: product.userId, // Map sellerId from product
+      sellerId: product.userId,
       name: product.name,
       price: price,
       image: product.image[0],
@@ -73,7 +71,6 @@ export const createOrder = async (userId, payload) => {
      throw new AppError("Price mismatch. Please refresh your cart and try again.", 400);
   }
 
-  // 3. Create Razorpay Order IF paymentMethod is ONLINE
   let razorpayOrder = null;
   if (paymentMethod === "ONLINE") {
     if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === "dummy") {
@@ -103,7 +100,7 @@ export const createOrder = async (userId, payload) => {
   // 4. Create the order and decrement stock atomically using a transaction
   const session = await mongoose.startSession();
   session.startTransaction();
-  console.time(`order-create-${userId}`);
+
 
   try {
     // Safely deduct stock using $inc and $gte condition to prevent race conditions
@@ -113,7 +110,7 @@ export const createOrder = async (userId, payload) => {
         Product.findOneAndUpdate(
           { _id: item.product, stock: { $gte: item.quantity } },
           { $inc: { stock: -item.quantity } },
-          { session, new: true }
+          { session, returnDocument: 'after' }
         )
       );
 
@@ -124,7 +121,6 @@ export const createOrder = async (userId, payload) => {
       }
     }
 
-    // Create the order
     const orderData = {
       userId,
       items: orderItems,
@@ -145,12 +141,11 @@ export const createOrder = async (userId, payload) => {
 
     const [order] = await Order.create([orderData], { session });
 
-    // Clear user cart
     await User.findByIdAndUpdate(userId, { $set: { cartItems: {} } }, { session });
 
     await session.commitTransaction();
     session.endSession();
-    console.timeEnd(`order-create-${userId}`);
+
 
     if (paymentMethod === "COD") {
       return { success: true, message: "Order placed successfully", order };
@@ -174,6 +169,11 @@ export const createOrder = async (userId, payload) => {
 export const fetchOrdersByUserId = async (userId) => {
   await connectDB();
   return Order.find({ userId }).populate("items.product").sort({ createdAt: -1 });
+};
+
+export const fetchOrderById = async (orderId, userId) => {
+  await connectDB();
+  return Order.findOne({ _id: orderId, userId }).populate("items.product");
 };
 
 export const fetchSellerOrders = async (sellerId) => {
@@ -214,7 +214,7 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
   await connectDB();
   const session = await mongoose.startSession();
   session.startTransaction();
-  console.time(`payment-verify-${orderId}`);
+
 
   try {
     const order = await Order.findById(orderId).session(session);
@@ -243,7 +243,7 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
       Product.findOneAndUpdate(
         { _id: item.product, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
-        { session, new: true }
+        { session, returnDocument: 'after' }
       )
     );
 
@@ -266,8 +266,8 @@ export const verifyPayment = async (orderId, paymentId, paymentAmount) => {
 
     await session.commitTransaction();
     session.endSession();
-    console.timeEnd(`payment-verify-${orderId}`);
     return order;
+
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
