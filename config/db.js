@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import { validateEnv } from "@/lib/env";
+
+// Validate environment variables on initialization
+validateEnv();
 
 let cached = global.mongoose || { conn: null, promise: null };
 
