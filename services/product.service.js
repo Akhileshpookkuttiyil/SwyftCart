@@ -1,5 +1,6 @@
 import connectDB from "@/config/db";
 import Product from "@/models/Product";
+import mongoose from "mongoose";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
@@ -63,6 +64,14 @@ const normalizeSort = (sort = {}) => {
 
 const buildProductFilters = (filters = {}) => {
   const query = {};
+
+  if (filters.ids) {
+    const ids = (Array.isArray(filters.ids) ? filters.ids : String(filters.ids).split(","))
+      .map((id) => String(id).trim())
+      .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+    query._id = ids.length > 0 ? { $in: ids } : { $in: [] };
+  }
 
   if (filters.userId) {
     query.userId = filters.userId;
@@ -198,7 +207,7 @@ export const updateProduct = async (productId, userId, updateData) => {
   const product = await Product.findOneAndUpdate(
     { _id: productId, userId },
     { $set: updateData },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   return product ? normalizeProductDocument(product.toObject()) : null;

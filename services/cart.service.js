@@ -64,7 +64,7 @@ export const addToCart = async (userId, productId, quantity = 1) => {
   user = await User.findByIdAndUpdate(
     userId,
     { $set: { [`cartItems.${productId}`]: nextQty } },
-    { new: true, select: "cartItems" }
+    { returnDocument: 'after', select: "cartItems" }
   );
 
   return sanitizeCartMap(user.cartItems);
@@ -81,7 +81,7 @@ export const updateCartItem = async (userId, productId, quantity) => {
     user = await User.findByIdAndUpdate(
       userId,
       { $unset: { [`cartItems.${productId}`]: "" } },
-      { new: true, select: "cartItems" }
+      { returnDocument: 'after', select: "cartItems" }
     );
     if (!user) throw new AppError("User not found", 404);
   } else {
@@ -94,7 +94,7 @@ export const updateCartItem = async (userId, productId, quantity) => {
     user = await User.findByIdAndUpdate(
       userId,
       { $set: { [`cartItems.${productId}`]: nextQty } },
-      { new: true, select: "cartItems" }
+      { returnDocument: 'after', select: "cartItems" }
     );
     if (!user) throw new AppError("User not found", 404);
   }
@@ -109,7 +109,7 @@ export const removeCartItem = async (userId, productId) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $unset: { [`cartItems.${productId}`]: "" } },
-    { new: true, select: "cartItems" }
+    { returnDocument: 'after', select: "cartItems" }
   );
 
   if (!user) throw new AppError("User not found", 404);
@@ -121,7 +121,7 @@ export const clearCart = async (userId) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $set: { cartItems: {} } },
-    { new: true, upsert: false }
+    { returnDocument: 'after', upsert: false }
   )
     .select("cartItems")
     .lean();
@@ -171,7 +171,7 @@ export const mergeGuestCart = async (userId, guestCart = {}) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updateOps },
-      { new: true, select: "cartItems" }
+      { returnDocument: 'after', select: "cartItems" }
     );
     return sanitizeCartMap(updatedUser.cartItems);
   }

@@ -37,7 +37,7 @@ export const updateAddress = async (id, userId, updateData) => {
   const address = await Address.findOneAndUpdate(
     { _id: id, userId },
     { $set: updateData },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 
   return address;
@@ -65,6 +65,6 @@ export const setDefaultAddress = async (id, userId) => {
   return await Address.findOneAndUpdate(
     { _id: id, userId },
     { $set: { isDefault: true } },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 };

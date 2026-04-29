@@ -4,14 +4,13 @@ const productSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-      ref: "User",
     },
     name: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
     category: { type: String, required: true },
     offerPrice: { type: Number, required: true },
-    stock: { type: Number, required: true, default: 0 },
+    stock: { type: Number, default: 0 },
     rating: { type: Number, default: 4.5 },
     image: {
       type: [String],

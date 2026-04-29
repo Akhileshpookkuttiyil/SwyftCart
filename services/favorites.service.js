@@ -56,7 +56,7 @@ export const addToFavorites = async (userId, productId) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $addToSet: { favorites: String(productId) } },
-    { new: true }
+    { returnDocument: 'after' }
   ).select("favorites").lean();
 
   if (!user) throw new AppError("User not found", 404);
@@ -70,7 +70,7 @@ export const removeFromFavorites = async (userId, productId) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $pull: { favorites: String(productId) } },
-    { new: true }
+    { returnDocument: 'after' }
   ).select("favorites").lean();
 
   if (!user) throw new AppError("User not found", 404);
@@ -95,7 +95,7 @@ export const toggleFavorite = async (userId, productId) => {
     await assertProductExists(productId);
   }
 
-  const updatedUser = await User.findByIdAndUpdate(userId, update, { new: true })
+  const updatedUser = await User.findByIdAndUpdate(userId, update, { returnDocument: 'after' })
     .select("favorites")
     .lean();
 
@@ -107,7 +107,7 @@ export const clearFavorites = async (userId) => {
   const user = await User.findByIdAndUpdate(
     userId,
     { $set: { favorites: [] } },
-    { new: true }
+    { returnDocument: 'after' }
   ).select("favorites").lean();
 
   if (!user) throw new AppError("User not found", 404);

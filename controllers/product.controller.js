@@ -1,4 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
+import { ProductSchema, PartialProductSchema } from "@/lib/validation";
 import authSeller from "@/lib/authSeller";
 import {
   AppError,
@@ -22,6 +23,7 @@ const getStringParam = (searchParams, key) => {
 
 const getProductQueryOptions = (searchParams) => ({
   filters: {
+    ids: getStringParam(searchParams, "ids"),
     category: getStringParam(searchParams, "category"),
     search: getStringParam(searchParams, "search"),
     minPrice: searchParams.get("minPrice"),
@@ -98,18 +100,27 @@ export const createProductController = withController(
     const userId = await requireSellerAuth(request);
     const formData = await request.formData();
 
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const price = formData.get("price");
-    const category = formData.get("category");
-    const offerPrice = formData.get("offerPrice");
+    const productData = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      price: formData.get("price"),
+      category: formData.get("category"),
+      offerPrice: formData.get("offerPrice"),
+      stock: formData.get("stock") || undefined,
+    };
+
+    const validation = ProductSchema.safeParse(productData);
+
+    if (!validation.success) {
+      const errorMessages = validation.error.errors.map((err) => err.message).join(", ");
+      throw new AppError(errorMessages, 400);
+    }
+
+    const { name, description, price, category, offerPrice, stock } = validation.data;
+
     const files = formData
       .getAll("images")
       .filter((file) => typeof file?.arrayBuffer === "function" && file.size > 0);
-
-    if (!name || !description || !price || !category || !offerPrice) {
-      throw new AppError("All product fields are required", 400);
-    }
 
     const image = await uploadImagesToCloudinary(files);
 
@@ -125,6 +136,7 @@ export const createProductController = withController(
       price,
       offerPrice,
       image,
+      stock,
     });
 
     return createSuccessResponse(
@@ -152,18 +164,24 @@ export const updateProductController = withController(
 
     const formData = await request.formData();
 
-    let updateData = {};
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const price = formData.get("price");
-    const category = formData.get("category");
-    const offerPrice = formData.get("offerPrice");
+    const rawData = {
+      name: formData.get("name") || undefined,
+      description: formData.get("description") || undefined,
+      price: formData.get("price") || undefined,
+      category: formData.get("category") || undefined,
+      offerPrice: formData.get("offerPrice") || undefined,
+      stock: formData.get("stock") || undefined,
+    };
 
-    if (name) updateData.name = name;
-    if (description) updateData.description = description;
-    if (price) updateData.price = Number(price);
-    if (category) updateData.category = category;
-    if (offerPrice) updateData.offerPrice = Number(offerPrice);
+    const validation = PartialProductSchema.safeParse(rawData);
+
+    if (!validation.success) {
+      const errorMessages = validation.error.errors.map((err) => err.message).join(", ");
+      throw new AppError(errorMessages, 400);
+    }
+
+    let updateData = { ...validation.data };
+
 
     const imageItems = formData.getAll("images");
     if (imageItems.length > 0) {
@@ -171,9 +189,8 @@ export const updateProductController = withController(
       const processedImages = await Promise.all(
         imageItems.map(async (item) => {
           if (typeof item === 'string' && item.startsWith('http')) {
-            return item; // It's an existing URL
+            return item;
           } else if (item && typeof item.arrayBuffer === 'function' && item.size > 0) {
-            // It's a new file upload
             const uploaded = await uploadImagesToCloudinary([item]);
             return uploaded[0];
           }
