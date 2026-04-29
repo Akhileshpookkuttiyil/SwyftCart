@@ -244,7 +244,7 @@ const AllProductsContent = () => {
                 )
               )}
               {searchInput && !searchLoading && !suggestions.length && (
-                <p className="px-5 py-4 text-sm text-gray-400 italic">No matches found for "{searchInput}"</p>
+                <p className="px-5 py-4 text-sm text-gray-400 italic">No matches found for &quot;{searchInput}&quot;</p>
               )}
             </div>
           )}

@@ -73,7 +73,10 @@ export default function ProductDetailsClient({ productData }) {
                 className="h-4 w-4"
                 src={isFavorited ? assets.heart : assets.heart_icon}
                 alt="heart_icon"
+                width={16}
+                height={16}
             />
+
           </button>
         </div>
 
@@ -122,7 +125,10 @@ export default function ProductDetailsClient({ productData }) {
                     : assets.star_dull_icon
                 }
                 alt="star_icon"
+                width={16}
+                height={16}
               />
+
             ))}
           </div>
           <p className="text-sm text-gray-500">({rating.toFixed(1)})</p>

@@ -41,12 +41,13 @@ const Navbar = () => {
         <Image
           src={assets.logo}
           alt="SwyftCart Logo"
-          width={128}
-          height={40}
           priority
+          loading="eager"
           className="w-28 md:w-32 cursor-pointer"
           style={{ height: "auto" }}
         />
+
+
       </Link>
 
       {/* Desktop Menu */}

@@ -68,7 +68,8 @@ const HeaderSlider = () => {
                 </button>
                 <button className="group flex items-center gap-2 px-6 py-2.5 font-medium">
                   {slide.buttonText2}
-                  <Image className="group-hover:translate-x-1 transition" src={assets.arrow_icon} alt="arrow_icon" />
+                  <Image className="group-hover:translate-x-1 transition" src={assets.arrow_icon} alt="arrow_icon" width={11} height={11} />
+
                 </button>
               </div>
             </div>
@@ -79,8 +80,12 @@ const HeaderSlider = () => {
                 alt={`Slide ${index + 1}`}
                 priority={index === 0}
                 placeholder="blur"
+                width={288}
+                height={288}
+                style={{ height: "auto", width: "auto" }}
                 sizes="(max-width: 768px) 50vw, 300px"
               />
+
             </div>
           </div>
         ))}

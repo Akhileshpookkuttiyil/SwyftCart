@@ -7,7 +7,7 @@ const Footer = () => {
     <footer>
       <div className="flex flex-col md:flex-row items-start justify-center px-6 md:px-16 lg:px-32 gap-10 py-14 border-b border-gray-500/30 text-gray-500">
         <div className="w-4/5">
-          <Image className="w-28 md:w-32" src={assets.logo} alt="logo" />
+          <Image className="w-28 md:w-32" src={assets.logo} alt="SwyftCart Logo" style={{ height: "auto" }} />
           <p className="mt-6 text-sm">
             SwyftCart is your premier destination for high-quality electronics and lifestyle products. We focus on providing a seamless shopping experience with fast delivery and curated selections that meet our rigorous standards for quality and reliability.
           </p>

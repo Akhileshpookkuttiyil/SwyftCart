@@ -178,7 +178,7 @@ const Dashboard = () => {
                             <Box className="w-8 h-8 text-gray-300" />
                         </div>
                         <h3 className="font-bold text-gray-900 text-lg">No products yet</h3>
-                        <p className="text-gray-500 mt-1 max-w-sm">You haven't added any products to your store. Add your first product to see it here.</p>
+                        <p className="text-gray-500 mt-1 max-w-sm">You haven&apos;t added any products to your store. Add your first product to see it here.</p>
                     </div>
                 )}
             </div>

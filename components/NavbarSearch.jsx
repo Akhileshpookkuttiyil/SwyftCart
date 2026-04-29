@@ -153,11 +153,11 @@ export default function NavbarSearch() {
                  onClick={searchRedirect}
                  className="px-3 py-2 text-xs text-center border-t text-blue-600 hover:bg-blue-50 focus:bg-blue-50"
                >
-                 View all results for "{query}"
+                 View all results for &quot;{query}&quot;
                </button>
              </div>
           ) : (
-             <div className="px-4 py-3 text-sm text-gray-500">No results found for "{query}"</div>
+             <div className="px-4 py-3 text-sm text-gray-500">No results found for &quot;{query}&quot;</div>
           )}
         </div>
       )}

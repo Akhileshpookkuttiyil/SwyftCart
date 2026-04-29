@@ -51,7 +51,11 @@ const ProductCard = memo(({ product }) => {
                         className="h-3 w-3"
                         src={isFavorited ? assets.heart : assets.heart_icon}
                         alt="heart_icon"
+                        width={12}
+                        height={12}
+
                     />
+
                 </button>
             </div>
 
@@ -70,7 +74,11 @@ const ProductCard = memo(({ product }) => {
                                     : assets.star_dull_icon
                             }
                             alt="star_icon"
+                            width={12}
+                            height={12}
+
                         />
+
                     ))}
                 </div>
             </div>
