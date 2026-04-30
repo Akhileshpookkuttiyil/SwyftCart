@@ -14,10 +14,19 @@ export const useCartStore = create(
   persist(
     (set, get) => ({
       cartItems: {},
+      cartOwner: "guest",
       isSyncing: false,
+      hasHydrated: false,
 
       // Initialize state (for merging guest cart)
-      setCartItems: (items) => set({ cartItems: items }),
+      setCartItems: (items, cartOwner = get().cartOwner) =>
+        set({
+          cartItems: get()._sanitizeItems(items),
+          cartOwner,
+          hasHydrated: true,
+        }),
+      setCartOwner: (cartOwner) => set({ cartOwner }),
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
       /**
        * Ensures cart items are valid numeric quantities
@@ -41,7 +50,7 @@ export const useCartStore = create(
         set({ cartItems: newItems, isSyncing: true });
 
         if (!isSignedIn) {
-          set({ isSyncing: false });
+          set({ isSyncing: false, cartOwner: "guest" });
           successToast("Added to cart", "cart-success");
           return;
         }
@@ -72,7 +81,7 @@ export const useCartStore = create(
         set({ cartItems: newItems, isSyncing: true });
 
         if (!isSignedIn) {
-          set({ isSyncing: false });
+          set({ isSyncing: false, cartOwner: "guest" });
           return;
         }
 
@@ -91,7 +100,7 @@ export const useCartStore = create(
 
       clearCart: async (isSignedIn, options = {}) => {
         const currentItems = get().cartItems;
-        set({ cartItems: {} });
+        set({ cartItems: {}, cartOwner: isSignedIn ? get().cartOwner : "guest" });
 
         if (!isSignedIn) return;
 
@@ -138,7 +147,13 @@ export const useCartStore = create(
     }),
     {
       name: GUEST_CART_KEY,
-      partialize: (state) => ({ cartItems: state.cartItems }),
+      partialize: (state) => ({
+        cartItems: state.cartItems,
+        cartOwner: state.cartOwner,
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated?.(true);
+      },
     }
   )
 );

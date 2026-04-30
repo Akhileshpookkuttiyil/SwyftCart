@@ -18,6 +18,8 @@ export const AppContext = createContext(null);
 
 export const useAppContext = () => useContext(AppContext);
 
+const getMergeFlagKey = (userId) => `swyftcart_cart_merged:${userId}`;
+
 export const AppContextProvider = ({ children }) => {
   const { user, isLoaded } = useUser();
   const { getToken, isSignedIn } = useAuth();
@@ -26,34 +28,37 @@ export const AppContextProvider = ({ children }) => {
   // Zustand Stores for state management
   const { setUserData, setIsSeller, clearUser } = useUserStore();
   const { 
-    cartItems, 
+    hasHydrated,
+    cartOwner,
     setCartItems,
+    setCartOwner,
     mergeCart,
   } = useCartStore();
   const { 
     setFavorites, 
   } = useFavoritesStore();
 
-  const mergedGuestStateRef = useRef(false);
+  const lastSignedInRef = useRef(false);
+  const lastUserIdRef = useRef(null);
+  const authSyncInFlightRef = useRef(false);
 
   const fetchUserData = useCallback(async () => {
     if (!isSignedIn || !isLoaded) return;
     try {
       const data = await fetchCurrentUserRequest();
       if (data?.success && data.user) {
+        const ownerId = data.user._id || user?.id || "guest";
         setUserData(data.user);
-        setCartItems(data.user.cartItems || {});
+        setCartItems(data.user.cartItems || {}, ownerId);
         setFavorites(data.user.favorites || []);
         setIsSeller(data.user.role === "seller" || user?.publicMetadata?.role === "seller");
       } else {
         clearUser();
-        setCartItems({});
         setFavorites([]);
       }
     } catch (error) {
       console.error("Fetch user data error:", error);
       clearUser();
-      setCartItems({});
       setFavorites([]);
     }
   }, [isLoaded, isSignedIn, user, setUserData, setCartItems, setFavorites, setIsSeller, clearUser]);
@@ -64,49 +69,98 @@ export const AppContextProvider = ({ children }) => {
     return () => setAuthTokenGetter(null);
   }, [getToken]);
 
-  // Initial load and sync
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !hasHydrated) return;
 
-    if (isSignedIn) {
-      fetchUserData();
-    } else {
-      mergedGuestStateRef.current = false;
+    const wasSignedIn = lastSignedInRef.current;
+    lastSignedInRef.current = isSignedIn;
+
+    if (!isSignedIn) {
+      if (wasSignedIn) {
+        const previousUserId = lastUserIdRef.current;
+        if (previousUserId) {
+          sessionStorage.removeItem(getMergeFlagKey(previousUserId));
+        }
+      }
+
+      lastUserIdRef.current = null;
+      authSyncInFlightRef.current = false;
+      if (wasSignedIn || cartOwner !== "guest") {
+        setCartItems({}, "guest");
+      }
       clearUser();
       setFavorites([]);
-    }
-  }, [fetchUserData, isLoaded, isSignedIn, clearUser, setFavorites]);
-
-  // Merge guest cart on login - ONLY if we haven't already and there are items to merge
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn || mergedGuestStateRef.current) return;
-
-    // Use sessionStorage to prevent re-merging on every refresh in the same session
-    const isAlreadyMerged = sessionStorage.getItem("swyftcart_cart_merged");
-    if (isAlreadyMerged) {
-      mergedGuestStateRef.current = true;
+      setIsSeller(false);
       return;
     }
 
-    const performMerge = async () => {
-      const itemsToMerge = Object.keys(cartItems).length;
-      if (itemsToMerge > 0) {
-        try {
-          await mergeCart(cartItems);
-          // CRITICAL: Clear local cart after merge to prevent re-merging
-          setCartItems({}); 
-          sessionStorage.setItem("swyftcart_cart_merged", "true");
-        } catch (error) {
-          console.error("Merge cart failed:", error);
+    const userId = user?.id;
+    if (!userId || authSyncInFlightRef.current) return;
+    if (wasSignedIn && lastUserIdRef.current === userId) return;
+
+    let isCancelled = false;
+
+    const syncAuthenticatedState = async () => {
+      authSyncInFlightRef.current = true;
+      const mergeFlagKey = getMergeFlagKey(userId);
+      const guestCartSnapshot = useCartStore.getState().cartItems;
+      const hasGuestItems =
+        cartOwner === "guest" && Object.keys(guestCartSnapshot).length > 0;
+
+      try {
+        if (hasGuestItems && !sessionStorage.getItem(mergeFlagKey)) {
+          await mergeCart(guestCartSnapshot);
+          setCartOwner(userId);
+          sessionStorage.setItem(mergeFlagKey, "true");
         }
+
+        const data = await fetchCurrentUserRequest();
+        if (isCancelled) return;
+
+        if (data?.success && data.user) {
+          setUserData(data.user);
+          setCartItems(data.user.cartItems || {}, userId);
+          setFavorites(data.user.favorites || []);
+          setIsSeller(
+            data.user.role === "seller" || user?.publicMetadata?.role === "seller"
+          );
+          lastUserIdRef.current = userId;
+        } else {
+          clearUser();
+          setFavorites([]);
+          setIsSeller(false);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error("Auth cart sync failed:", error);
+          clearUser();
+          setFavorites([]);
+          setIsSeller(false);
+        }
+      } finally {
+        authSyncInFlightRef.current = false;
       }
-      mergedGuestStateRef.current = true;
     };
 
-    performMerge();
-  }, [isLoaded, isSignedIn, mergeCart, setCartItems]);
+    syncAuthenticatedState();
 
-
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    isLoaded,
+    hasHydrated,
+    isSignedIn,
+    user,
+    mergeCart,
+    cartOwner,
+    setCartItems,
+    setCartOwner,
+    setUserData,
+    setFavorites,
+    setIsSeller,
+    clearUser,
+  ]);
 
   const value = useMemo(
     () => ({
