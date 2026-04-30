@@ -16,7 +16,7 @@ async function connectDB() {
   if (!cached.promise) {
     // Delay env validation until a DB connection is actually needed so
     // server component imports do not crash the production build.
-    validateEnv();
+    validateEnv(["MONGODB_URI"]);
 
     // console.log("[connectDB] Creating new connection promise");
     const opts = {
