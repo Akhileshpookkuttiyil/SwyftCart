@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 import { validateEnv } from "@/lib/env";
 
-// Validate environment variables on initialization
-validateEnv();
-
 let cached = global.mongoose || { conn: null, promise: null };
 
 if (!global.mongoose) {
@@ -17,6 +14,10 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
+    // Delay env validation until a DB connection is actually needed so
+    // server component imports do not crash the production build.
+    validateEnv();
+
     // console.log("[connectDB] Creating new connection promise");
     const opts = {
       bufferCommands: false,
