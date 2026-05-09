@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { ProductSchema, PartialProductSchema } from "@/lib/validation";
 import authSeller from "@/lib/authSeller";
 import {
@@ -40,7 +40,7 @@ const getProductQueryOptions = (searchParams) => ({
 });
 
 const requireSellerAuth = async (request) => {
-  const { userId } = getAuth(request);
+  const { userId } = await auth();
 
   if (!userId) {
     throw new AppError("Unauthorized", 401);

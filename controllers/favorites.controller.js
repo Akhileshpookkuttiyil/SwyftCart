@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import {
   AppError,
   createSuccessResponse,
@@ -12,8 +12,8 @@ import {
   toggleFavorite,
 } from "@/services/favorites.service";
 
-const requireAuthUserId = (request) => {
-  const { userId } = getAuth(request);
+const requireAuthUserId = async (request) => {
+  const { userId } = await auth();
   if (!userId) {
     throw new AppError("Unauthorized", 401);
   }
@@ -30,7 +30,7 @@ const readBody = async (request) => {
 
 export const getFavoritesController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const favorites = await fetchFavorites(userId);
     return createSuccessResponse({ success: true, favorites });
   },
@@ -42,7 +42,7 @@ export const getFavoritesController = withController(
 
 export const addFavoriteController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId } = await readBody(request);
     if (!productId) {
       throw new AppError("productId is required", 400);
@@ -59,7 +59,7 @@ export const addFavoriteController = withController(
 
 export const removeFavoriteController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId } = await readBody(request);
 
     const favorites = productId
@@ -76,7 +76,7 @@ export const removeFavoriteController = withController(
 
 export const toggleFavoriteController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId } = await readBody(request);
     if (!productId) {
       throw new AppError("productId is required", 400);

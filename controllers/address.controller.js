@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import {
   AppError,
   createSuccessResponse,
@@ -15,7 +15,7 @@ import {
 
 export const getAddressesController = withController(
   async (request) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const addresses = await fetchAddresses(userId);
@@ -26,7 +26,7 @@ export const getAddressesController = withController(
 
 export const getAddressByIdController = withController(
   async (request, { params }) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const { id } = await params;
@@ -40,7 +40,7 @@ export const getAddressByIdController = withController(
 
 export const createAddressController = withController(
   async (request) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const body = await request.json();
@@ -62,7 +62,7 @@ export const createAddressController = withController(
 
 export const updateAddressController = withController(
   async (request, { params }) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const { id } = await params;
@@ -78,7 +78,7 @@ export const updateAddressController = withController(
 
 export const deleteAddressController = withController(
   async (request, { params }) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const { id } = await params;
@@ -92,7 +92,7 @@ export const deleteAddressController = withController(
 
 export const setDefaultAddressController = withController(
   async (request, { params }) => {
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
     if (!userId) throw new AppError("Unauthorized", 401);
 
     const { id } = await params;

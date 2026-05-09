@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import {
   AppError,
   createSuccessResponse,
@@ -13,8 +13,8 @@ import {
   updateCartItem,
 } from "@/services/cart.service";
 
-const requireAuthUserId = (request) => {
-  const { userId } = getAuth(request);
+const requireAuthUserId = async (request) => {
+  const { userId } = await auth();
   if (!userId) {
     throw new AppError("Unauthorized", 401);
   }
@@ -31,7 +31,7 @@ const readBody = async (request) => {
 
 export const getCartController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const cartItems = await fetchCart(userId);
     return createSuccessResponse({ success: true, cartItems });
   },
@@ -43,7 +43,7 @@ export const getCartController = withController(
 
 export const addToCartController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId, quantity } = await readBody(request);
     if (!productId) {
       throw new AppError("productId is required", 400);
@@ -60,7 +60,7 @@ export const addToCartController = withController(
 
 export const updateCartController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId, quantity } = await readBody(request);
     if (!productId) {
       throw new AppError("productId is required", 400);
@@ -77,7 +77,7 @@ export const updateCartController = withController(
 
 export const deleteCartController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { productId } = await readBody(request);
 
     const cartItems = productId
@@ -94,7 +94,7 @@ export const deleteCartController = withController(
 
 export const mergeCartController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { cartItems } = await readBody(request);
     const mergedCartItems = await mergeGuestCart(userId, cartItems || {});
     return createSuccessResponse({ success: true, cartItems: mergedCartItems });

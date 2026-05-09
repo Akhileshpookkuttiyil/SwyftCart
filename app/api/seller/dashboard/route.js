@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import authSeller from "@/lib/authSeller";
 import { AppError, createSuccessResponse, withController } from "@/lib/api-response";
 import connectDB from "@/config/db";
@@ -6,7 +6,7 @@ import Product from "@/models/Product";
 import Order from "@/models/Order";
 
 const requireSellerAuth = async (request) => {
-  const { userId } = getAuth(request);
+  const { userId } = await auth();
 
   if (!userId) {
     throw new AppError("Unauthorized", 401);

@@ -1,4 +1,4 @@
-import { clerkClient, getAuth } from "@clerk/nextjs/server";
+import { clerkClient, auth } from "@clerk/nextjs/server";
 import {
   AppError,
   createSuccessResponse,
@@ -10,7 +10,7 @@ import User from "@/models/User";
 export const getCurrentUserController = withController(
   async (request) => {
     console.log("[getCurrentUserController] Started");
-    const { userId } = getAuth(request);
+    const { userId } = await auth();
 
     if (!userId) {
       console.log("[getCurrentUserController] Unauthorized");

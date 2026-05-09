@@ -104,8 +104,8 @@ Create a `.env.local` file in the root and add the following:
 
 ```env
 # Clerk Keys
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_YOUR_CLERK_PUBLISHABLE_KEY
+CLERK_SECRET_KEY=sk_test_YOUR_CLERK_SECRET_KEY
 
 # Database
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/swyftcart

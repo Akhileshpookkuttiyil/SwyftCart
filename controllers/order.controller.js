@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import {
   AppError,
   createSuccessResponse,
@@ -8,8 +8,8 @@ import { createOrder, fetchOrdersByUserId, fetchOrderById, fetchSellerOrders, up
 import authSeller from "@/lib/authSeller";
 import crypto from "crypto";
 
-const requireAuthUserId = (request) => {
-  const { userId } = getAuth(request);
+const requireAuthUserId = async (request) => {
+  const { userId } = await auth();
   if (!userId) {
     throw new AppError("Unauthorized", 401);
   }
@@ -18,7 +18,7 @@ const requireAuthUserId = (request) => {
 
 export const placeOrderController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { address, items, amount, paymentMethod } = await request.json();
 
     if (!address) {
@@ -45,7 +45,7 @@ export const placeOrderController = withController(
 
 export const getUserOrdersController = withController(
   async (request) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const orders = await fetchOrdersByUserId(userId);
     return createSuccessResponse({ success: true, orders });
   },
@@ -57,7 +57,7 @@ export const getUserOrdersController = withController(
 
 export const getSellerOrdersController = withController(
     async (request) => {
-      const userId = requireAuthUserId(request);
+      const userId = await requireAuthUserId(request);
       const isSeller = await authSeller(userId);
       if (!isSeller) throw new AppError("Unauthorized", 401);
 
@@ -72,7 +72,7 @@ export const getSellerOrdersController = withController(
 
 export const updateStatusController = withController(
     async (request) => {
-      const userId = requireAuthUserId(request);
+      const userId = await requireAuthUserId(request);
       const isSeller = await authSeller(userId);
       if (!isSeller) throw new AppError("Unauthorized", 401);
 
@@ -122,7 +122,7 @@ export const updatePaymentStatusController = withController(
 
 export const getOrderByIdController = withController(
   async (request, { params }) => {
-    const userId = requireAuthUserId(request);
+    const userId = await requireAuthUserId(request);
     const { id } = await params;
     if (!id) throw new AppError("Order ID is required", 400);
 
