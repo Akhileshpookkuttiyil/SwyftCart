@@ -54,7 +54,7 @@ const Dashboard = () => {
         );
     }
 
-    const { totalProducts = 0, totalRevenue = 0, pendingOrders = 0, recentlyAddedProducts = [] } = dashboardData || {};
+    const { totalProducts = 0, totalRevenue = 0, pendingOrders = 0, outOfStockCount = 0, recentlyAddedProducts = [] } = dashboardData || {};
 
     const stats = [
         {
@@ -82,12 +82,12 @@ const Dashboard = () => {
             bg: "bg-gray-50"
         },
         {
-            label: "Active Listings",
-            value: totalProducts,
-            icon: Package,
-            subtitle: "Publicly visible",
-            color: "text-green-600",
-            bg: "bg-green-50"
+            label: "Out of Stock",
+            value: outOfStockCount,
+            icon: AlertCircle,
+            subtitle: "Requires attention",
+            color: outOfStockCount > 0 ? "text-rose-600" : "text-gray-600",
+            bg: outOfStockCount > 0 ? "bg-rose-50" : "bg-gray-50"
         }
     ];
 
@@ -129,7 +129,7 @@ const Dashboard = () => {
                                         <th className="px-6 py-4">Category</th>
                                         <th className="px-6 py-4">Price</th>
                                         <th className="px-6 py-4">Offer Price</th>
-                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Stock Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-gray-800">
@@ -161,10 +161,22 @@ const Dashboard = () => {
                                             <td className="px-6 py-4 font-medium text-gray-600 capitalize">{product.category}</td>
                                             <td className="px-6 py-4 text-gray-500 line-through">{formatPrice(product.price)}</td>
                                             <td className="px-6 py-4 font-bold text-gray-900">{formatPrice(product.offerPrice)}</td>
+                                            
+                                            {/* Stock Status badges in recently added products */}
                                             <td className="px-6 py-4">
-                                                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                                                    Active
-                                                </span>
+                                                {product.stock <= 0 ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-50 text-red-700 border border-red-100">
+                                                        Out of Stock
+                                                    </span>
+                                                ) : product.stock <= 5 ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-100">
+                                                        Low Stock ({product.stock})
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                                        {product.stock} Units
+                                                    </span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -197,12 +209,16 @@ const Dashboard = () => {
                     ) : (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 text-sm">
-                                <span className="text-gray-600">Product Validity</span>
-                                <span className="font-semibold px-2.5 py-1 bg-green-50 text-green-700 rounded-md ring-1 ring-inset ring-green-600/20">All OK</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 text-sm">
                                 <span className="text-gray-600">Fulfillment Rate</span>
                                 <span className="font-semibold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md ring-1 ring-inset ring-blue-600/20">98%</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 text-sm">
+                                <span className="text-gray-600">Stock Health</span>
+                                {outOfStockCount > 0 ? (
+                                    <span className="font-semibold px-2.5 py-1 bg-rose-50 text-rose-700 rounded-md ring-1 ring-inset ring-rose-600/20">{outOfStockCount} Out of Stock</span>
+                                ) : (
+                                    <span className="font-semibold px-2.5 py-1 bg-green-50 text-green-700 rounded-md ring-1 ring-inset ring-green-600/20">All Healthy</span>
+                                )}
                             </div>
                         </div>
                     )}
