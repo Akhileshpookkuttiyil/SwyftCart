@@ -15,6 +15,7 @@ const AddProduct = () => {
   const [category, setCategory] = useState("Earphone");
   const [price, setPrice] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
+  const [stock, setStock] = useState("10");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -33,6 +34,7 @@ const AddProduct = () => {
     formData.append("category", category);
     formData.append("price", price);
     formData.append("offerPrice", offerPrice);
+    formData.append("stock", stock);
 
     validFiles.forEach((file) => {
       formData.append("images", file);
@@ -50,6 +52,7 @@ const AddProduct = () => {
         setCategory("Earphone");
         setPrice("");
         setOfferPrice("");
+        setStock("10");
       } else {
         errorToast(data.message || "Failed to add product", "add-product-error");
       }
@@ -140,7 +143,7 @@ const AddProduct = () => {
               ></textarea>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-700" htmlFor="category">
                   Category
@@ -195,6 +198,21 @@ const AddProduct = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-gray-700" htmlFor="product-stock">
+                  Stock / Quantity
+                </label>
+                <input
+                  id="product-stock"
+                  type="number"
+                  placeholder="10"
+                  className="outline-none py-2.5 px-3.5 w-full rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white"
+                  onChange={(e) => setStock(e.target.value)}
+                  value={stock}
+                  required
+                />
               </div>
             </div>
           </div>

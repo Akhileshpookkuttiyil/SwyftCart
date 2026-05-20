@@ -11,6 +11,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
   const [category, setCategory] = useState(product?.category || "Earphone");
   const [price, setPrice] = useState(product?.price || "");
   const [offerPrice, setOfferPrice] = useState(product?.offerPrice || "");
+  const [stock, setStock] = useState(product?.stock || 0);
   const [imageSlots, setImageSlots] = useState(
     Array.from({ length: 4 }).map((_, i) => product?.image?.[i] || null)
   );
@@ -25,6 +26,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
     formData.append("category", category);
     formData.append("price", price);
     formData.append("offerPrice", offerPrice);
+    formData.append("stock", stock);
     // Note: userId is retrieved directly from the Auth Token on the backend for security
 
     imageSlots.forEach((item) => {
@@ -168,7 +170,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                  <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-gray-700 whitespace-nowrap" htmlFor="edit-product-price">
                     Price
@@ -176,7 +178,7 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                   <input
                     id="edit-product-price"
                     type="number"
-                    className="outline-none py-2.5 px-3.5 rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white w-full"
+                    className="outline-none py-2.5 px-2 rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white w-full"
                     onChange={(e) => setPrice(e.target.value)}
                     value={price}
                     required
@@ -189,9 +191,22 @@ const EditProductModal = ({ product, onClose, onUpdate }) => {
                   <input
                     id="edit-offer-price"
                     type="number"
-                    className="outline-none py-2.5 px-3.5 rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white w-full"
+                    className="outline-none py-2.5 px-2 rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white w-full"
                     onChange={(e) => setOfferPrice(e.target.value)}
                     value={offerPrice}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold text-gray-700 whitespace-nowrap" htmlFor="edit-product-stock">
+                    Stock
+                  </label>
+                  <input
+                    id="edit-product-stock"
+                    type="number"
+                    className="outline-none py-2.5 px-2 rounded-lg border border-gray-200 text-sm focus:border-gray-900 transition-colors bg-white w-full"
+                    onChange={(e) => setStock(e.target.value)}
+                    value={stock}
                     required
                   />
                 </div>
