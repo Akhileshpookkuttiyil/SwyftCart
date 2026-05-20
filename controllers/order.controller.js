@@ -37,6 +37,7 @@ export const placeOrderController = withController(
     const result = await createOrder(userId, { addressData: address, items, amount, paymentMethod });
     return createSuccessResponse(result);
   },
+
   {
     fallbackMessage: "Failed to place order",
     context: "POST /api/order/place",
@@ -61,8 +62,17 @@ export const getSellerOrdersController = withController(
       const isSeller = await authSeller(userId);
       if (!isSeller) throw new AppError("Unauthorized", 401);
 
-      const orders = await fetchSellerOrders(userId);
-      return createSuccessResponse({ success: true, orders });
+      const searchParams = request.nextUrl.searchParams;
+      const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+      const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 10, 1), 100);
+      const status = searchParams.get("status") || "all";
+
+      const result = await fetchSellerOrders(userId, { page, limit, status });
+      return createSuccessResponse({ 
+        success: true, 
+        orders: result.orders, 
+        pagination: result.pagination 
+      });
     },
     {
       fallbackMessage: "Failed to fetch seller orders",
@@ -91,7 +101,6 @@ export const updateStatusController = withController(
 export const updatePaymentStatusController = withController(
   async (request) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = await request.json();
-
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
       throw new AppError("Invalid payment details", 400);

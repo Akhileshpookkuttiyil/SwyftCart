@@ -176,23 +176,44 @@ export const fetchOrderById = async (orderId, userId) => {
   return Order.findOne({ _id: orderId, userId }).populate("items.product");
 };
 
-export const fetchSellerOrders = async (sellerId) => {
+export const fetchSellerOrders = async (sellerId, { page = 1, limit = 10, status = "all" } = {}) => {
   await connectDB();
   
-  // Fetch orders that contain items belonging to this seller
-  const orders = await Order.find({ "items.sellerId": sellerId })
-    .populate("items.product")
-    .sort({ createdAt: -1 });
+  const query = { "items.sellerId": sellerId };
+  if (status && status !== "all") {
+    query.status = status;
+  }
+
+  const skip = (page - 1) * limit;
+
+  // Perform parallel counts and paginated queries
+  const [total, orders] = await Promise.all([
+    Order.countDocuments(query),
+    Order.find(query)
+      .populate("items.product")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+  ]);
 
   // Filter items within each order to only include what belongs to the seller
   const filteredOrders = orders.map(order => {
     const orderObj = order.toObject();
-    // Ensure robust string comparison for IDs
     orderObj.items = orderObj.items.filter(item => String(item.sellerId) === String(sellerId));
     return orderObj;
   });
 
-  return filteredOrders;
+  return {
+    orders: filteredOrders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+      hasNextPage: skip + limit < total,
+      hasPrevPage: page > 1,
+    }
+  };
 };
 
 export const updateOrderStatus = async (orderId, sellerId, status) => {
