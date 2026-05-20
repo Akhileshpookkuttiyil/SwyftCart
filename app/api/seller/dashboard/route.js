@@ -26,42 +26,34 @@ export const getSellerDashboardController = withController(
     const userId = await requireSellerAuth(request);
     await connectDB();
     
-    // 1. Get seller's products to filter orders
-    const sellerProducts = await Product.find({ userId }).select("_id price offerPrice");
-    const productIds = sellerProducts.map(p => String(p._id));
-    const productIdsSet = new Set(productIds);
+    // 1. Fetch all orders containing products belonging to this seller
+    const orders = await Order.find({ "items.sellerId": userId }).lean();
 
-    // 2. Fetch all orders containing these products
-    const orders = await Order.find({ "items.product": { $in: productIds } }).lean();
-
-    // 3. Calculate metrics
+    // 2. Calculate metrics using snapshotted checkout prices
     let totalRevenue = 0;
     let pendingOrdersCount = 0;
 
     orders.forEach(order => {
-        // Calculate revenue only from items belonging to THIS seller
-        order.items.forEach(item => {
-            if (productIdsSet.has(String(item.product))) {
-                // Find product to get price (in a real system, we'd snapshot this in the order)
-                const p = sellerProducts.find(sp => String(sp._id) === String(item.product));
-                if (p) {
-                    totalRevenue += (p.offerPrice ?? p.price) * item.quantity;
-                }
-            }
-        });
-
-        // Count as pending if not delivered/cancelled
-        if (!["Delivered", "Cancelled"].includes(order.status)) {
-            pendingOrdersCount++;
+      order.items.forEach(item => {
+        if (String(item.sellerId) === String(userId)) {
+          totalRevenue += item.price * item.quantity;
         }
+      });
+
+      // Count as pending if not delivered, cancelled, returned, or failed (lowercase in DB)
+      if (!["delivered", "cancelled", "returned", "failed"].includes(order.status)) {
+        pendingOrdersCount++;
+      }
     });
 
-    const [totalProducts, recentlyAddedProducts] = await Promise.all([
+    // 3. Fetch product counts and recently added items
+    const [totalProducts, outOfStockCount, recentlyAddedProducts] = await Promise.all([
       Product.countDocuments({ userId }),
+      Product.countDocuments({ userId, stock: { $lte: 0 } }),
       Product.find({ userId })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select("name price offerPrice category createdAt image")
+        .select("name price offerPrice category stock createdAt image")
         .lean()
     ]);
     
@@ -70,6 +62,7 @@ export const getSellerDashboardController = withController(
       totalProducts,
       totalRevenue,
       pendingOrders: pendingOrdersCount,
+      outOfStockCount,
       recentlyAddedProducts
     });
   },
