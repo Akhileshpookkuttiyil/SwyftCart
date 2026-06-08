@@ -20,6 +20,14 @@ const ALLOWED_SORT_FIELDS = new Set([
 const escapeRegex = (value = "") =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const normalizeRatingBreakdown = (breakdown = {}) => ({
+  1: Number(breakdown?.[1] || 0),
+  2: Number(breakdown?.[2] || 0),
+  3: Number(breakdown?.[3] || 0),
+  4: Number(breakdown?.[4] || 0),
+  5: Number(breakdown?.[5] || 0),
+});
+
 const normalizeNumber = (value) => {
   if (value === undefined || value === null || value === "") {
     return undefined;
@@ -105,6 +113,14 @@ const normalizeProductDocument = (product) => ({
   ...product,
   image: Array.isArray(product.image) ? product.image : [],
   isOutOfStock: (product.stock || 0) <= 0,
+  averageRating: Number(product.averageRating || 0),
+  totalReviews: Number(product.totalReviews || 0),
+  ratingBreakdown: normalizeRatingBreakdown(product.ratingBreakdown),
+  displayRating:
+    Number(product.totalReviews || 0) > 0
+      ? Number(product.averageRating || 0)
+      : Number(product.rating ?? 4.5),
+  reviewCount: Number(product.totalReviews || 0),
 });
 
 export const fetchProducts = async ({

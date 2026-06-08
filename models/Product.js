@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+const emptyRatingBreakdown = {
+  1: 0,
+  2: 0,
+  3: 0,
+  4: 0,
+  5: 0,
+};
+
 const productSchema = new mongoose.Schema(
   {
     userId: {
@@ -12,6 +20,15 @@ const productSchema = new mongoose.Schema(
     offerPrice: { type: Number, required: true },
     stock: { type: Number, default: 0 },
     rating: { type: Number, default: 4.5 },
+    averageRating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
+    ratingBreakdown: {
+      1: { type: Number, default: emptyRatingBreakdown[1] },
+      2: { type: Number, default: emptyRatingBreakdown[2] },
+      3: { type: Number, default: emptyRatingBreakdown[3] },
+      4: { type: Number, default: emptyRatingBreakdown[4] },
+      5: { type: Number, default: emptyRatingBreakdown[5] },
+    },
     image: {
       type: [String],
       required: true,
