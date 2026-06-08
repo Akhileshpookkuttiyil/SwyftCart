@@ -23,7 +23,12 @@ export default function ProductDetailsClient({ productData }) {
     window.scrollTo(0, 0);
   }, []);
 
-  const rating = Number(productData?.rating ?? 4.5);
+  const rating = Number(
+    Number(productData?.totalReviews || 0) > 0
+      ? productData?.displayRating ?? productData?.averageRating ?? 4.5
+      : productData?.displayRating ?? productData?.rating ?? 4.5
+  );
+  const reviewCount = Number(productData?.reviewCount ?? productData?.totalReviews ?? 0);
   const isFavorited = isFavorite(productData._id);
 
   const formatPrice = (price) => {
@@ -132,6 +137,9 @@ export default function ProductDetailsClient({ productData }) {
             ))}
           </div>
           <p className="text-sm text-gray-500">({rating.toFixed(1)})</p>
+          <p className="text-sm text-gray-400">
+            {reviewCount > 0 ? `${reviewCount} review${reviewCount === 1 ? "" : "s"}` : "Legacy rating"}
+          </p>
         </div>
         
         <p className="text-gray-600 text-sm leading-relaxed mb-4">{productData.description}</p>
@@ -202,5 +210,4 @@ export default function ProductDetailsClient({ productData }) {
     </div>
   );
 }
-
 

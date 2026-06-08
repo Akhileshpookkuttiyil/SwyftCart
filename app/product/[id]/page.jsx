@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 import ProductDetailsClient from "@/components/product/ProductDetailsClient";
+import ReviewSection from "@/components/product/ReviewSection";
 import { normalizeProductRecord } from "@/lib/productCatalog";
 
 export async function generateMetadata({ params }) {
@@ -46,6 +47,14 @@ export default async function ProductPage({ params }) {
       <main className="px-6 md:px-16 lg:px-32 pt-10 pb-20 space-y-12">
         <section>
           <ProductDetailsClient productData={productData} />
+        </section>
+
+        <section>
+          <ReviewSection
+            productId={productData._id}
+            productName={productData.name}
+            legacyRating={productData.displayRating ?? productData.rating}
+          />
         </section>
 
         <section className="flex flex-col items-center">

@@ -19,7 +19,12 @@ const ProductCard = memo(({ product }) => {
         })}`;
     };
 
-    const rating = Number(product?.rating ?? 4.5)
+    const rating = Number(
+        Number(product?.totalReviews || 0) > 0
+            ? product?.displayRating ?? product?.averageRating ?? 4.5
+            : product?.displayRating ?? product?.rating ?? 4.5
+    );
+    const reviewCount = Number(product?.reviewCount ?? product?.totalReviews ?? 0);
     const isFavorited = isFavorite(product._id)
 
     return (
@@ -81,6 +86,9 @@ const ProductCard = memo(({ product }) => {
 
                     ))}
                 </div>
+                <p className="text-[11px] text-gray-400">
+                    {reviewCount > 0 ? `(${reviewCount})` : "(No reviews yet)"}
+                </p>
             </div>
 
             <div className="flex items-end justify-between w-full mt-1">
