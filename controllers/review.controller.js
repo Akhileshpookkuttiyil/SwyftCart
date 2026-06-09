@@ -1,7 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { AppError, createSuccessResponse, withController } from "@/lib/api-response";
 import authSeller from "@/lib/authSeller";
 import { fetchUserById } from "@/services/user.service";
+import User from "@/models/User";
 import {
   createReview,
   updateReview,
@@ -36,6 +37,61 @@ const getPaginationParams = (searchParams) => ({
   page: searchParams.get("page"),
   limit: searchParams.get("limit"),
 });
+
+const resolveAuthorSnapshot = async (userId) => {
+  const dbUser = await fetchUserById(userId, { select: "name imageUrl email" });
+
+  const getFallbackName = async () => {
+    try {
+      const client = await clerkClient();
+      const clerkUser = await client.users.getUser(userId);
+      const fullName = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim();
+      return {
+        name:
+          fullName ||
+          clerkUser.username ||
+          clerkUser.emailAddresses?.[0]?.emailAddress?.split("@")?.[0] ||
+          "Verified Customer",
+        imageUrl: clerkUser.imageUrl || "",
+      };
+    } catch {
+      return {
+        name: "Verified Customer",
+        imageUrl: "",
+      };
+    }
+  };
+
+  if (!dbUser) {
+    return getFallbackName();
+  }
+
+  const normalizedName = String(dbUser.name || "").trim();
+  if (normalizedName && normalizedName !== "New User") {
+    return {
+      name: normalizedName,
+      imageUrl: dbUser.imageUrl || "",
+    };
+  }
+
+  const fallback = await getFallbackName();
+  if (fallback.name && fallback.name !== "Verified Customer") {
+    await User.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          name: fallback.name,
+          imageUrl: fallback.imageUrl || dbUser.imageUrl || "",
+        },
+      }
+    );
+  }
+
+  return {
+    name: fallback.name,
+    imageUrl: fallback.imageUrl || dbUser.imageUrl || "",
+  };
+};
 
 export const getProductReviewsController = withController(
   async (request, { params }) => {
@@ -79,13 +135,8 @@ export const createReviewController = withController(
       throw new AppError(errorMessages, 400);
     }
 
-    const dbUser = await fetchUserById(userId, { select: "name imageUrl" });
-    if (!dbUser) throw new AppError("User not found", 404);
-
-    const review = await createReview(userId, productId, validation.data, {
-      name: dbUser.name,
-      imageUrl: dbUser.imageUrl || "",
-    });
+    const authorSnapshot = await resolveAuthorSnapshot(userId);
+    const review = await createReview(userId, productId, validation.data, authorSnapshot);
 
     return createSuccessResponse(
       {
