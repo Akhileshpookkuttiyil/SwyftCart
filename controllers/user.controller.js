@@ -9,29 +9,22 @@ import User from "@/models/User";
 
 export const getCurrentUserController = withController(
   async (request) => {
-    console.log("[getCurrentUserController] Started");
     const { userId } = await auth();
 
     if (!userId) {
-      console.log("[getCurrentUserController] Unauthorized");
       throw new AppError("Unauthorized", 401);
     }
 
-    console.log("[getCurrentUserController] Fetching user from DB:", userId);
     let user = await fetchUserById(userId, {
       select: "_id name email imageUrl role cartItems favorites",
     });
 
     if (!user) {
-      console.log("[getCurrentUserController] User not in DB, starting JIT Sync");
       try {
-        console.log("[getCurrentUserController] Initializing Clerk client");
         const client = await clerkClient();
-        console.log("[getCurrentUserController] Fetching user from Clerk");
         const clerkUser = await client.users.getUser(userId);
         
         if (clerkUser) {
-          console.log("[getCurrentUserController] Clerk user found, updating DB");
           const { first_name, last_name, email_addresses, image_url, public_metadata } = clerkUser;
           
           user = await User.findOneAndUpdate(
@@ -50,8 +43,6 @@ export const getCurrentUserController = withController(
             },
             { upsert: true, new: true }
           );
-          
-          console.log(`[getCurrentUserController] JIT Sync complete for ${userId}`);
         }
       } catch (error) {
         console.error("[getCurrentUserController] JIT Sync Error:", error);
@@ -59,11 +50,9 @@ export const getCurrentUserController = withController(
     }
 
     if (!user) {
-      console.log("[getCurrentUserController] User not found after sync attempt");
       throw new AppError("User not found", 404);
     }
 
-    console.log("[getCurrentUserController] Returning user data");
     return createSuccessResponse({
       success: true,
       user: {

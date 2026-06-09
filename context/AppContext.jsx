@@ -45,6 +45,13 @@ export const AppContextProvider = ({ children }) => {
   const fetchUserData = useCallback(async () => {
     if (!isSignedIn || !isLoaded) return;
     try {
+      const cachedUserData = useUserStore.getState().userData;
+      const cachedUserId = cachedUserData?._id ? String(cachedUserData._id) : null;
+      if (cachedUserId && user?.id && cachedUserId === user.id) {
+        setIsSeller(cachedUserData.role === "seller" || user?.publicMetadata?.role === "seller");
+        return;
+      }
+
       const data = await fetchCurrentUserRequest();
       if (data?.success && data.user) {
         const ownerId = data.user._id || user?.id || "guest";
@@ -106,12 +113,22 @@ export const AppContextProvider = ({ children }) => {
       const guestCartSnapshot = useCartStore.getState().cartItems;
       const hasGuestItems =
         cartOwner === "guest" && Object.keys(guestCartSnapshot).length > 0;
+      const cachedUserData = useUserStore.getState().userData;
+      const cachedUserId = cachedUserData?._id ? String(cachedUserData._id) : null;
 
       try {
         if (hasGuestItems && !sessionStorage.getItem(mergeFlagKey)) {
           await mergeCart(guestCartSnapshot);
           setCartOwner(userId);
           sessionStorage.setItem(mergeFlagKey, "true");
+        }
+
+        if (cachedUserId === userId) {
+          setIsSeller(
+            cachedUserData.role === "seller" || user?.publicMetadata?.role === "seller"
+          );
+          lastUserIdRef.current = userId;
+          return;
         }
 
         const data = await fetchCurrentUserRequest();
