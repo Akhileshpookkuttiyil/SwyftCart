@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spinner } from "@heroui/react";
 import {
@@ -49,6 +49,14 @@ const formatDate = (value) => {
   } catch {
     return "";
   }
+};
+
+const getReviewerName = (name) => {
+  const normalized = String(name || "").trim();
+  if (!normalized || normalized.toLowerCase() === "new user") {
+    return "Verified Customer";
+  }
+  return normalized;
 };
 
 const StarRating = ({ rating = 0, size = "w-4 h-4", interactive = false, onChange }) => {
@@ -125,7 +133,7 @@ const ReviewCard = ({
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-start gap-2.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-xs font-semibold text-orange-700">
-          {(review.userName || "U")
+          {getReviewerName(review.userName)
             .split(" ")
             .map((part) => part[0])
             .slice(0, 2)
@@ -134,7 +142,7 @@ const ReviewCard = ({
         </div>
         <div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-sm font-semibold text-gray-900">{review.userName || "Verified Customer"}</p>
+            <p className="text-sm font-semibold text-gray-900">{getReviewerName(review.userName)}</p>
             {review.isVerifiedPurchase ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
                 <ShieldCheck className="h-3 w-3" />
@@ -378,9 +386,9 @@ export default function ReviewSection({
   initialEligibility = null,
 }) {
   const { isSignedIn } = useAuth();
+  const { user: clerkUser } = useUser();
   const { openSignIn } = useClerk();
   const isSeller = useUserStore((state) => state.isSeller);
-  const userData = useUserStore((state) => state.userData);
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
@@ -464,13 +472,20 @@ export default function ReviewSection({
 
   const publicReviewList = reviewData?.reviews || [];
   const pagination = reviewData?.pagination;
+  const authorName =
+    clerkUser?.fullName?.trim() ||
+    [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim() ||
+    clerkUser?.username?.trim() ||
+    clerkUser?.primaryEmailAddress?.emailAddress?.split("@")?.[0] ||
+    "";
+  const authorImageUrl = clerkUser?.imageUrl || "";
 
   const createMutation = useMutation({
     mutationFn: (payload) =>
       createReviewRequest(productId, {
         ...payload,
-        authorName: userData?.name || "",
-        authorImageUrl: userData?.imageUrl || "",
+        authorName,
+        authorImageUrl,
       }),
     onSuccess: async (data) => {
       toast.success("Review added");
