@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import mongoose from "mongoose";
 import { fetchProductById, fetchProducts } from "@/services/product.service";
 import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
@@ -6,6 +8,12 @@ import { notFound } from "next/navigation";
 import ProductDetailsClient from "@/components/product/ProductDetailsClient";
 import ReviewSection from "@/components/product/ReviewSection";
 import { normalizeProductRecord } from "@/lib/productCatalog";
+import {
+  fetchProductRatingSummary,
+  fetchProductReviews,
+  findDeliveredOrderForProduct,
+  fetchUserReviewForProduct,
+} from "@/services/review.service";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -24,11 +32,33 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductPage({ params }) {
   const { id } = await params;
+  const { userId } = await auth();
+  const isValidProductId = mongoose.Types.ObjectId.isValid(id);
   
   // Fetch product data and featured products in parallel
-  const [rawProduct, featuredResponse] = await Promise.all([
+  const [rawProduct, featuredResponse, reviewSummary, publicReviews, eligibility] = await Promise.all([
     fetchProductById(id),
-    fetchProducts({ pagination: { limit: 10 } }) // Fetch a bit more to ensure we have enough after filtering
+    fetchProducts({ pagination: { limit: 10 } }), // Fetch a bit more to ensure we have enough after filtering
+    isValidProductId
+      ? fetchProductRatingSummary(id).then((data) => ({ success: true, ...data }))
+      : Promise.resolve(null),
+    isValidProductId
+      ? fetchProductReviews(id, { pagination: { page: 1, limit: 5 } }).then((data) => ({
+          success: true,
+          ...data,
+        }))
+      : Promise.resolve(null),
+    userId && isValidProductId
+      ? Promise.all([
+          findDeliveredOrderForProduct(userId, id),
+          fetchUserReviewForProduct(userId, id),
+        ]).then(([orderId, existingReview]) => ({
+          success: true,
+          canReview: !!orderId && !existingReview,
+          hasReviewed: !!existingReview,
+          existingReview: existingReview || null,
+        }))
+      : Promise.resolve(null),
   ]);
 
   if (!rawProduct) {
@@ -54,6 +84,9 @@ export default async function ProductPage({ params }) {
             productId={productData._id}
             productName={productData.name}
             legacyRating={productData.displayRating ?? productData.rating}
+            initialSummary={reviewSummary}
+            initialReviews={publicReviews}
+            initialEligibility={eligibility}
           />
         </section>
 

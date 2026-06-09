@@ -226,6 +226,7 @@ const ReviewForm = ({
   isAdminView,
   canReview,
   hasReviewed,
+  isEligibilityLoading,
   onSubmit,
   onSignIn,
   onReset,
@@ -260,6 +261,22 @@ const ReviewForm = ({
             >
               Sign in to review
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSignedIn && isEligibilityLoading && !hasReviewed) {
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Spinner size="sm" />
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Checking your review access</p>
+            <p className="mt-1 text-sm text-gray-600">
+              Loading your delivery status and review eligibility.
+            </p>
           </div>
         </div>
       </div>
@@ -352,7 +369,14 @@ const ReviewForm = ({
   );
 };
 
-export default function ReviewSection({ productId, productName, legacyRating = 4.5 }) {
+export default function ReviewSection({
+  productId,
+  productName,
+  legacyRating = 4.5,
+  initialSummary = null,
+  initialReviews = null,
+  initialEligibility = null,
+}) {
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const isSeller = useUserStore((state) => state.isSeller);
@@ -366,6 +390,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
     queryKey: ["review-summary", productId],
     queryFn: () => fetchProductRatingSummaryRequest(productId),
     enabled: !!productId,
+    initialData: initialSummary || undefined,
     staleTime: 60 * 1000,
   });
 
@@ -373,6 +398,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
     queryKey: ["review-eligibility", productId],
     queryFn: () => fetchReviewEligibilityRequest(productId),
     enabled: !!productId && isSignedIn,
+    initialData: initialEligibility || undefined,
     retry: false,
     staleTime: 30 * 1000,
   });
@@ -384,6 +410,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
         ? adminFetchProductReviewsRequest(productId, { page, limit: 5 })
         : fetchProductReviewsRequest(productId, { page, limit: 5 }),
     enabled: !!productId,
+    initialData: page === 1 && initialReviews ? initialReviews : undefined,
     staleTime: 30 * 1000,
   });
 
@@ -398,6 +425,8 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
   const reviewSummary = summaryQuery.data?.success ? summaryQuery.data : null;
   const reviewData = reviewListQuery.data?.success ? reviewListQuery.data : null;
   const eligibility = eligibilityQuery.data?.success ? eligibilityQuery.data : null;
+  const isEligibilityLoading =
+    !eligibility && (eligibilityQuery.isLoading || eligibilityQuery.isFetching);
   const existingReview = eligibility?.existingReview || null;
   const canReview = Boolean(eligibility?.canReview);
   const hasReviewed = Boolean(eligibility?.hasReviewed);
@@ -672,6 +701,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
             isAdminView={isAdminView}
             canReview={canReview}
             hasReviewed={hasReviewed}
+            isEligibilityLoading={isEligibilityLoading}
             onSubmit={handleSubmit}
             onSignIn={openSignIn}
             onReset={() => {
