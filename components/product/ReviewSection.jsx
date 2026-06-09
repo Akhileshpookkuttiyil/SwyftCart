@@ -117,10 +117,14 @@ const ReviewCard = ({
   onUnhide,
   onAdminDelete,
 }) => (
-  <article className={`rounded-2xl border p-5 shadow-sm ${review.isHidden ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-white"}`}>
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-orange-700 font-semibold">
+  <article
+    className={`rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md ${
+      review.isHidden ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-white"
+    }`}
+  >
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-xs font-semibold text-orange-700">
           {(review.userName || "U")
             .split(" ")
             .map((part) => part[0])
@@ -129,17 +133,17 @@ const ReviewCard = ({
             .toUpperCase()}
         </div>
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-gray-900">{review.userName || "Verified Customer"}</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-sm font-semibold text-gray-900">{review.userName || "Verified Customer"}</p>
             {review.isVerifiedPurchase ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                <ShieldCheck className="h-3 w-3" />
                 Verified Purchase
               </span>
             ) : null}
             {review.isHidden ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                <EyeOff className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                <EyeOff className="h-3 w-3" />
                 Hidden
               </span>
             ) : null}
@@ -148,23 +152,23 @@ const ReviewCard = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         {isOwnReview && !isAdminView && (
           <>
             <button
               type="button"
               onClick={() => onEdit(review)}
-              className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
             >
-              <PencilLine className="w-3.5 h-3.5" />
+              <PencilLine className="h-3 w-3" />
               Edit
             </button>
             <button
               type="button"
               onClick={() => onDelete(review)}
-              className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              className="inline-flex items-center gap-1 rounded-full border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="h-3 w-3" />
               Delete
             </button>
           </>
@@ -176,27 +180,27 @@ const ReviewCard = ({
               <button
                 type="button"
                 onClick={() => onHide(review)}
-                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
               >
-                <EyeOff className="w-3.5 h-3.5" />
+                <EyeOff className="h-3 w-3" />
                 Hide
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => onUnhide(review)}
-                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
               >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <ArrowLeftRight className="h-3 w-3" />
                 Restore
               </button>
             )}
             <button
               type="button"
               onClick={() => onAdminDelete(review)}
-              className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              className="inline-flex items-center gap-1 rounded-full border border-red-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="h-3 w-3" />
               Delete
             </button>
           </>
@@ -204,13 +208,13 @@ const ReviewCard = ({
       </div>
     </div>
 
-    <div className="mt-4 flex items-center gap-2">
-      <StarRating rating={review.rating} size="w-4 h-4" />
-      <span className="text-sm font-semibold text-gray-700">{review.rating.toFixed(1)}</span>
+    <div className="mt-3 flex items-center gap-2">
+      <StarRating rating={review.rating} size="w-3.5 h-3.5" />
+      <span className="text-xs font-semibold text-gray-700">{review.rating.toFixed(1)}</span>
     </div>
 
-    <h4 className="mt-3 text-base font-semibold text-gray-900">{review.title}</h4>
-    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">{review.body}</p>
+    <h4 className="mt-2 text-sm font-semibold text-gray-900">{review.title}</h4>
+    <p className="mt-1.5 whitespace-pre-wrap text-sm leading-5 text-gray-600">{review.body}</p>
   </article>
 );
 
@@ -228,7 +232,7 @@ const ReviewForm = ({
 }) => {
   if (isAdminView && hasReviewed) {
     return (
-      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
         <p className="font-semibold">Admin accounts cannot edit review content or ratings.</p>
         <p className="mt-1">
           You can still use the moderation tools below to hide, restore, or delete reviews.
@@ -239,20 +243,20 @@ const ReviewForm = ({
 
   if (!isSignedIn) {
     return (
-      <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 p-6">
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4">
         <div className="flex items-start gap-3">
           <div className="rounded-full bg-white p-2 text-orange-600 shadow-sm">
-            <MessageSquareText className="w-5 h-5" />
+            <MessageSquareText className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Write a review</h3>
+            <h3 className="text-base font-semibold text-gray-900">Write a review</h3>
             <p className="mt-1 text-sm text-gray-600">
               Sign in to share your experience with this product.
             </p>
             <button
               type="button"
               onClick={onSignIn}
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700"
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
             >
               Sign in to review
             </button>
@@ -264,7 +268,7 @@ const ReviewForm = ({
 
   if (!canReview && !hasReviewed) {
     return (
-      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
         <p className="font-semibold">Review eligibility required</p>
         <p className="mt-1">
           Only customers with a delivered order containing this product can leave a review.
@@ -274,10 +278,10 @@ const ReviewForm = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <form onSubmit={onSubmit} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             {hasReviewed ? "Edit your review" : "Write a review"}
           </h3>
           <p className="mt-1 text-sm text-gray-600">
@@ -295,45 +299,45 @@ const ReviewForm = ({
         ) : null}
       </div>
 
-      <div className="mt-5 space-y-5">
+      <div className="mt-4 space-y-4">
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Rating</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">Rating</label>
           <StarRating
             rating={form.rating}
             interactive
             onChange={(value) => setForm((current) => ({ ...current, rating: value }))}
-            size="w-5 h-5"
+            size="w-4 h-4"
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Title</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">Title</label>
           <input
             value={form.title}
             onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
             placeholder="Short summary of your experience"
-            className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-500"
+            className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-orange-500"
             maxLength={120}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Review</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">Review</label>
           <textarea
             value={form.body}
             onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))}
             placeholder="Tell others what you liked, what could be better, and how you used it."
-            className="min-h-32 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-500"
+            className="min-h-28 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-orange-500"
             maxLength={2000}
           />
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isSubmitting ? <Spinner size="sm" /> : null}
           {hasReviewed ? "Update review" : "Submit review"}
@@ -355,7 +359,6 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
-  const [adminPage, setAdminPage] = useState(1);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [editingReviewId, setEditingReviewId] = useState(null);
 
@@ -370,6 +373,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
     queryKey: ["review-eligibility", productId],
     queryFn: () => fetchReviewEligibilityRequest(productId),
     enabled: !!productId && isSignedIn,
+    retry: false,
     staleTime: 30 * 1000,
   });
 
@@ -387,6 +391,7 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
     queryKey: ["review-admin-stats", productId],
     queryFn: () => adminFetchRatingStatsRequest(productId),
     enabled: !!productId && isSignedIn && isSeller,
+    retry: false,
     staleTime: 30 * 1000,
   });
 
@@ -589,27 +594,27 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
   };
 
   return (
-    <div className="space-y-8 rounded-[2rem] bg-gradient-to-b from-white to-gray-50/60 p-6 md:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="space-y-5 rounded-3xl border border-gray-100 bg-white/95 p-4 shadow-sm md:p-5">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-600">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-600">
             Customer reviews
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+          <h2 className="mt-1.5 text-xl font-semibold text-gray-900 md:text-2xl">
             What buyers say about {productName}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 max-w-2xl text-sm text-gray-600">
             Ratings and verified feedback from customers who purchased and received this product.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-gray-100 bg-gray-50/80 p-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-semibold text-gray-900">
+              <span className="text-2xl font-semibold text-gray-900">
                 {effectiveRating.toFixed(1)}
               </span>
-              <Star className="w-5 h-5 fill-orange-400 text-orange-400" />
+              <Star className="h-4 w-4 fill-orange-400 text-orange-400" />
             </div>
             <p className="mt-1 text-xs text-gray-500">
               {reviewSummary?.totalReviews > 0
@@ -619,29 +624,29 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
           </div>
           <div className="flex flex-col justify-center gap-1 text-sm text-gray-600">
             <p className="inline-flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-green-600" />
+              <ShieldCheck className="h-4 w-4 text-green-600" />
               Verified purchase checks
             </p>
             <p className="inline-flex items-center gap-2">
-              <Flag className="w-4 h-4 text-orange-500" />
+              <Flag className="h-4 w-4 text-orange-500" />
               Moderation ready
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-gray-900">Rating breakdown</h3>
+      <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900">Rating breakdown</h3>
           <p className="mt-1 text-sm text-gray-500">See how customers rated this product.</p>
-          <div className="mt-6">
+          <div className="mt-4">
             <RatingDistribution
               breakdown={reviewSummary?.ratingBreakdown}
               totalReviews={reviewSummary?.totalReviews || 0}
             />
           </div>
           {isAdminView && adminStatsQuery.data?.success ? (
-            <div className="mt-6 rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">
+            <div className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
               <p className="font-semibold text-gray-900">Admin statistics</p>
               <p className="mt-1">Hidden reviews: {adminStatsQuery.data.stats?.hiddenReviews || 0}</p>
               <p>
@@ -656,17 +661,17 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
           ) : null}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <ReviewForm
             form={form}
             setForm={setForm}
             isSubmitting={
               createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
             }
-          isSignedIn={isSignedIn}
-          isAdminView={isAdminView}
-          canReview={canReview}
-          hasReviewed={hasReviewed}
+            isSignedIn={isSignedIn}
+            isAdminView={isAdminView}
+            canReview={canReview}
+            hasReviewed={hasReviewed}
             onSubmit={handleSubmit}
             onSignIn={openSignIn}
             onReset={() => {
@@ -683,10 +688,10 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
             }}
           />
 
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-base font-semibold text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900">
                   {isAdminView ? "All reviews" : "Latest reviews"}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
@@ -701,9 +706,9 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
                     type="button"
                     disabled={page <= 1}
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
-                    className="rounded-full border border-gray-200 p-2 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full border border-gray-200 p-1.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <ChevronUp className="w-4 h-4 rotate-90" />
+                    <ChevronUp className="h-4 w-4 rotate-90" />
                   </button>
                   <span>
                     Page {pagination.page} of {pagination.totalPages}
@@ -712,15 +717,15 @@ export default function ReviewSection({ productId, productName, legacyRating = 4
                     type="button"
                     disabled={page >= pagination.totalPages}
                     onClick={() => setPage((current) => current + 1)}
-                    className="rounded-full border border-gray-200 p-2 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full border border-gray-200 p-1.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <ChevronDown className="w-4 h-4 rotate-90" />
+                    <ChevronDown className="h-4 w-4 rotate-90" />
                   </button>
                 </div>
               ) : null}
             </div>
 
-            <div className="mt-6">{renderReviews()}</div>
+            <div className="mt-4">{renderReviews()}</div>
           </div>
         </div>
       </div>
