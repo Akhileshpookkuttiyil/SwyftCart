@@ -380,6 +380,7 @@ export default function ReviewSection({
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const isSeller = useUserStore((state) => state.isSeller);
+  const userData = useUserStore((state) => state.userData);
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
@@ -465,7 +466,12 @@ export default function ReviewSection({
   const pagination = reviewData?.pagination;
 
   const createMutation = useMutation({
-    mutationFn: (payload) => createReviewRequest(productId, payload),
+    mutationFn: (payload) =>
+      createReviewRequest(productId, {
+        ...payload,
+        authorName: userData?.name || "",
+        authorImageUrl: userData?.imageUrl || "",
+      }),
     onSuccess: async (data) => {
       toast.success("Review added");
       setPage(1);
