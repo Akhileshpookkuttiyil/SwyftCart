@@ -103,7 +103,7 @@ const RatingDistribution = ({ breakdown, totalReviews }) => {
             </div>
             <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-500"
+                className="h-full rounded-full bg-linear-to-r from-orange-400 to-amber-500"
                 style={{ width: `${width}%` }}
               />
             </div>
@@ -132,7 +132,7 @@ const ReviewCard = ({
   >
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-xs font-semibold text-orange-700">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-orange-100 to-amber-100 text-xs font-semibold text-orange-700">
           {getReviewerName(review.userName)
             .split(" ")
             .map((part) => part[0])
@@ -380,7 +380,6 @@ const ReviewForm = ({
 export default function ReviewSection({
   productId,
   productName,
-  legacyRating = 4.5,
   initialSummary = null,
   initialReviews = null,
   initialEligibility = null,
@@ -464,11 +463,9 @@ export default function ReviewSection({
   }, [hasReviewed, isSignedIn]);
 
   const effectiveRating = useMemo(() => {
-    if (!reviewSummary) return Number(legacyRating || 4.5);
-    return reviewSummary.totalReviews > 0
-      ? Number(reviewSummary.averageRating || 0)
-      : Number(reviewSummary.rating || legacyRating || 4.5);
-  }, [legacyRating, reviewSummary]);
+    if (!reviewSummary || Number(reviewSummary.totalReviews || 0) === 0) return 0;
+    return Number(reviewSummary.averageRating || 0);
+  }, [reviewSummary]);
 
   const publicReviewList = reviewData?.reviews || [];
   const pagination = reviewData?.pagination;
@@ -669,7 +666,7 @@ export default function ReviewSection({
             <p className="mt-1 text-xs text-gray-500">
               {reviewSummary?.totalReviews > 0
                 ? `${reviewSummary.totalReviews} review${reviewSummary.totalReviews === 1 ? "" : "s"}`
-                : "Legacy rating"}
+                : "No reviews yet"}
             </p>
           </div>
           <div className="flex flex-col justify-center gap-1 text-sm text-gray-600">

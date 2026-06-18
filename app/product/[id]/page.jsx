@@ -83,7 +83,6 @@ export default async function ProductPage({ params }) {
           <ReviewSection
             productId={productData._id}
             productName={productData.name}
-            legacyRating={productData.displayRating ?? productData.rating}
             initialSummary={reviewSummary}
             initialReviews={publicReviews}
             initialEligibility={eligibility}
